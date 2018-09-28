@@ -6,7 +6,7 @@
   Copyright (c) 2018
 
 */
-#include 'AI_PS_Library.js';
+#include './libraries/AI_PS_Library.js';
 var win = new Window('dialog', 'Transfer swatches', undefined);
 win.orientation = 'column';
 win.alignChildren = ['fill', 'fill'];

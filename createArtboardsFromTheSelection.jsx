@@ -1,3 +1,12 @@
+/* 
+
+  Author: Alexander Ladygin (i@ladygin.pro)
+  Program version: Adobe Illustrator CC+
+  Name: createArtboardsFromTheSelection.jsx;
+  Copyright (c) 2018
+
+*/
+
 var win = new Window('dialog', 'Create artboard from the selection');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];

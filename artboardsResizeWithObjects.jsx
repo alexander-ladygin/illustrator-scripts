@@ -10,6 +10,8 @@
 
 */
 
+#target illustrator
+
 var lockedItems = [],
     hiddenItems = [];
 
@@ -80,8 +82,8 @@ function getArtboardValues (__index) {
 }
 
 function saveItemsState() {
-    for (var i = 0; i < doc.pageItems.length; i++) {
-        var currItem = doc.pageItems[i];
+    for (var i = 0; i < activeDocument.pageItems.length; i++) {
+        var currItem = activeDocument.pageItems[i];
         if (currItem.locked == true) {
             lockedItems.push(i);
             currItem.locked = false;
@@ -96,11 +98,11 @@ function saveItemsState() {
 function restoreItemsState() {
     for (var i = 0; i < lockedItems.length; i++) {
         var index = lockedItems[i];
-        doc.pageItems[index].locked = true;
+        activeDocument.pageItems[index].locked = true;
     }
     for (var j = 0; j < hiddenItems.length; j++) {
         var index = hiddenItems[j];
-        doc.pageItems[index].hidden = true;
+        activeDocument.pageItems[index].hidden = true;
     }
 }
 
@@ -186,6 +188,13 @@ var win = new Window('dialog', 'Resize artboard with objects', undefined);
     winArtActive.value = true;
     winArtNum.enabled = false;
 
+    var optGroup = win.add('panel');
+    optGroup.orientation = 'column';
+    optGroup.alignChildren = ['fill', 'fill'];
+
+    var winAllItems = optGroup.add('checkbox', undefined, 'Include hidden & locked items');
+    winAllItems.value = false;
+
     var editGroup = win.add('panel');
         editGroup.orientation = 'row';
         editGroup.alignChildren = ['fill', 'fill'];
@@ -255,7 +264,9 @@ function startAction() {
     var $size = (winScale.value ? parseInt(winValue.text) + '%' : parseInt(winValue.text)) || 0,
         $mode = (winHeight.value ? 'height' : 'width');
 
-    saveItemsState();
+    if (winAllItems.value) {
+        saveItemsState();
+    }
     if (winArtActive.value) {
         resizeArtboardWithObjects($size, $mode);
     }
@@ -274,11 +285,12 @@ function startAction() {
                     resizeArtboardWithObjects($size, $mode, arr[i]);
                 }
             }
-    restoreItemsState();
+    if (winAllItems.value) {
+        restoreItemsState();
+    }
 
     win.close();
 }
-
 
 // open window
     win.center();

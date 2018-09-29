@@ -2,7 +2,7 @@
 
   Author: Alexander Ladygin (i@ladygin.pro)
   Program version: Adobe Illustrator CC+
-  Name: duplicateMoveToMask.js;
+  Name: puzzleClipper.jsx;
   Copyright (c) 2018
 
 */

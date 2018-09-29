@@ -2,7 +2,7 @@
 
   Author: Alexander Ladygin (i@ladygin.pro)
   Program version: Adobe Illustrator CC+
-  Name: transferSwatches.js;
+  Name: transferSwatches.jsx;
   Copyright (c) 2018
 
 */

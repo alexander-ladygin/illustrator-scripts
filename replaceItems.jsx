@@ -2,7 +2,7 @@
 
   Author: Alexander Ladygin (i@ladygin.pro)
   Program version: Adobe Illustrator CC+
-  Name: replaceItems.js;
+  Name: replaceItems.jsx;
   Copyright (c) 2018
 
 */

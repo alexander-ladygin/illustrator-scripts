@@ -140,12 +140,12 @@ function rotateArt(board) {
         // selection[k].rotate(90);
         if (cwAngle.value == true) {
             // rotate 90 CW
-            selection[k].rotate(-90);
+            selection[k].rotate(-90, true, true, true, true, Transformation.CENTER);
             selection[k].left = newArtRect[0] + bottom;
             selection[k].top = newArtRect[1] - left;
         } else {
             // rotate 90 CCW
-            selection[k].rotate(90);
+            selection[k].rotate(90, true, true, true, true, Transformation.CENTER);
             selection[k].left = newArtRect[0] - top;
             selection[k].top = newArtRect[1] + right;
         }

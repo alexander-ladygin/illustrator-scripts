@@ -10,7 +10,7 @@
 
 */
 
-#target illustrator
+#target illustrator;
 
 var lockedItems = [],
     hiddenItems = [];

@@ -10,7 +10,7 @@
 
 */
 
-#target illustrator
+#target illustrator;
 app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
 var scriptName = 'ARWO',
@@ -58,6 +58,9 @@ try {
         var cancel = btns.add('button', undefined, 'Cancel', {name: 'cancel'});
         cancel.helpTip = 'Press Esc to Close';
         cancel.onClick = function () { dlg.close(); }
+
+        selection = null;
+        app.redraw();
 
         dlg.center();
         dlg.show();
@@ -115,7 +118,9 @@ function restoreItemsState() {
 
 // Main function for rotate artboard
 function rotateArt(board) {
-    var artRect = board.artboardRect,
+    app.coordinateSystem = CoordinateSystem.ARTBOARDCOORDINATESYSTEM;
+
+    var artRect = [].concat(board.artboardRect),
         artWidth = artRect[2] - artRect[0],
         artHeight = -(artRect[3] - artRect[1]);
     deselect();
@@ -128,33 +133,32 @@ function rotateArt(board) {
         artRect[2] - artWidth / 2 + (artHeight / 2),
         artRect[3] + artHeight / 2 - (artWidth / 2)
     ];
-    board.artboardRect = newArtRect;
 
     // Rotate objects
     for (var k = 0; k < selection.length; k++) {
-        var bnds = selection[k].geometricBounds,
+        var bnds = selection[k].position,
+            __width = selection[k].width,
+            __height = selection[k].height,
             top = bnds[1] - artRect[1],
-            right = bnds[2] - artRect[2],
-            left = bnds[0] - artRect[0],
-            bottom = bnds[3] - artRect[3];
-        // selection[k].rotate(90);
+            left = bnds[0] - artRect[0];
+
         if (cwAngle.value == true) {
             // rotate 90 CW
             selection[k].rotate(-90, true, true, true, true, Transformation.CENTER);
-            selection[k].left = newArtRect[0] + bottom;
-            selection[k].top = newArtRect[1] - left;
+            selection[k].position = [newArtRect[2] - __height + top, newArtRect[1] - left];
         } else {
             // rotate 90 CCW
             selection[k].rotate(90, true, true, true, true, Transformation.CENTER);
-            selection[k].left = newArtRect[0] - top;
-            selection[k].top = newArtRect[1] + right;
+            selection[k].position = [newArtRect[0] - top, newArtRect[3] + left + __width];
         }
     }
     deselect();
+
+    board.artboardRect = newArtRect;
 }
 
 function deselect() {
-    activeDocument.selection = null;
+    selection = null;
 }
 
 function showError(err) {

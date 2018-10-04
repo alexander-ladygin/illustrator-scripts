@@ -6,7 +6,6 @@
   Copyright (c) 2018
 
 */
-
 #include './libraries/AI_PS_Library.js';
 var win = new Window('dialog', 'Replace items', undefined);
     win.orientation = 'column';
@@ -22,7 +21,8 @@ var panel = win.add('panel', undefined, 'What to replace?');
         randomRadio = panel.add('radiobutton', undefined, 'All in group (random)'),
         groupValue = panel.add('group'),
         randomValue = groupValue.add('edittext', undefined, '100'),
-        randomValueUnit = groupValue.add('statictext', undefined, '%');
+        randomValueUnit = groupValue.add('statictext', undefined, '%'),
+        elementsInGroupCheckbox = panel.add('checkbox', undefined, 'Replace items in a group?');
 
     groupValue.orientation = 'row';
     groupValue.margins = 0;
@@ -36,7 +36,8 @@ var panelCheckboxes = win.add('panel');
 
     var copyWHCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy Width & Height'),
         saveOriginalCheckbox = panelCheckboxes.add('checkbox', undefined, 'Save original element'),
-        copyColorsCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy colors from element');
+        copyColorsCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy colors from element'),
+        randomRotateCheckbox = panelCheckboxes.add('checkbox', undefined, 'Random element rotation');
 
     bufferRadio.value = true;
     copyWHCheckbox.value = false;
@@ -68,97 +69,68 @@ var panelCheckboxes = win.add('panel');
     win.center();
     win.show();
 
+function randomRotation (item) {
+    item.rotate(Math.floor(Math.random() * 360), true, true, true, true, Transformation.CENTER);
+}
+
 function startAction() {
     if (selection.length) {
         panel.enabled = groupValue.enabled = panelCheckboxes.enabled = ok.enabled = cancel.enabled = false;
 
-        progressBarCounter = progressBar.maxvalue / selection.length;
+        var __ratio = !isNaN(parseFloat(randomValue.text)) ? parseFloat(randomValue.text) / 100 : 1,
+            items = (!elementsInGroupCheckbox.value ? selection : selection[selection.length - 1].pageItems),
+            nodes = (currentRadio.value ? selection[0] : (bufferRadio.value ? [] : selection[0].pageItems)),
+            length = nodes.length,
+            i = items.length;
 
-        var __ratio = !isNaN(parseFloat(randomValue.text)) ? parseFloat(randomValue.text) / 100 : 1;
+        progressBarCounter = progressBar.maxvalue / i;
 
         if (bufferRadio.value) {
-            var items = selection,
-                collection = [];
-
-            items.each(function (item, i) {
-                selection = null;
-                app.paste();
-
-                selection.appendTo(item, 'after');
-                collection.push(selection[0]);
-
-                var node = selection[0],
-                    __fn = 'Width';
-
-                if (node.height >= node.width) __fn = 'Height';
-
-                if (!copyWHCheckbox.value) {
-                    node[__fn]((item.height <= item.width ? item.width : item.height) * __ratio, {
-                            constrain: true,
-                            anchor: 'center'
-                        })
-                        node.left = item.left - (node.width - item.width) / 2;
-                        node.top = item.top + (node.height - item.height) / 2;
-                }
-                    else {
-                        node.attr({
-                            width: item.width,
-                            height: item.height
-                        })
-                        node.left = item.left - (node.width - item.width) / 2;
-                        node.top = item.top + (node.height - item.height) / 2;
-                    }
-
-                if (copyColorsCheckbox.value && item.fillColor) selection[0].fill(item.fillColor);
-                if (!saveOriginalCheckbox.value) item.remove();
-
-                progressBar.value += progressBarCounter;
-                win.update();
-            });
-
-            selection = collection;
+            selection = null;
+            app.paste();
+            nodes = selection[0];
+            selection = null;
         }
-            else {
-                var items = selection,
-                    nodes = (currentRadio.value ? selection[0] : selection[0].pageItems),
-                    length = nodes.length;
 
-                function getNode() {
-                    return (currentRadio.value ? nodes : nodes[ Math.floor(Math.random() * length) ]);
-                }
-                
-                items.each(function (item, i) {
-                    if (i) {
-                        var node = getNode().duplicate(item, ElementPlacement.PLACEBEFORE),
-                            __fn = 'Width';
+        function getNode() {
+            return ((currentRadio.value || bufferRadio.value) ? nodes : nodes[ Math.floor(Math.random() * length) ]);
+        }
 
-                        if (node.height >= node.width) __fn = 'Height';
+        while (i--) {
+            if (currentRadio.value && !i) break;
+            var item = items[i],
+                node = getNode().duplicate(item, ElementPlacement.PLACEBEFORE),
+                __fn = 'Width';
 
-                        if (!copyWHCheckbox.value) {
-                            node[__fn]((item.height >= item.width ? item.width : item.height) * __ratio, {
-                                    constrain: true,
-                                    anchor: 'center'
-                                });
-                            node.left = item.left - (node.width - item.width) / 2;
-                            node.top = item.top + (node.height - item.height) / 2;
-                        }
-                            else {
-                                node.attr({
-                                    width: item.width,
-                                    height: item.height
-                                })
-                                node.left = item.left - (node.width - item.width) / 2;
-                                node.top = item.top + (node.height - item.height) / 2;
-                            }
+            if (node.height >= node.width) __fn = 'Height';
 
-                        if (copyColorsCheckbox.value && item.fillColor) node.fill(item.fillColor);
-                        if (!saveOriginalCheckbox.value) item.remove();
+            if (randomRotateCheckbox.value) randomRotation(node);
 
-                        progressBar.value += progressBarCounter;
-                        win.update();
-                    }
-                });
+            if (!copyWHCheckbox.value) {
+                node[__fn]((item.height >= item.width ? item.width : item.height) * __ratio, {
+                        constrain: true,
+                        anchor: 'center'
+                    });
+                node.left = item.left - (node.width - item.width) / 2;
+                node.top = item.top + (node.height - item.height) / 2;
             }
+                else {
+                    node.attr({
+                        width: item.width,
+                        height: item.height
+                    })
+                    node.left = item.left - (node.width - item.width) / 2;
+                    node.top = item.top + (node.height - item.height) / 2;
+                }
+
+            if (copyColorsCheckbox.value && item.fillColor) node.fill(item.fillColor);
+            if (!saveOriginalCheckbox.value) item.remove();
+
+            progressBar.value += progressBarCounter;
+            win.update();
+        }
+
+        if (bufferRadio.value) nodes.remove();
 
     }
 

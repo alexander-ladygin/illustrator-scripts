@@ -14,7 +14,7 @@
 app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
 var scriptName = 'ARWO',
-    scriptVersion = '1.1';
+    scriptVersion = '1.2';
 
 try {
     if (documents.length > 0) {

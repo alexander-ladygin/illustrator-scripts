@@ -7,20 +7,34 @@
 
 */
 #target illustrator
-#include './libraries/AI_PS_Library.js';
 app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
-var length = selection.length - 1;
-    target = selection[length];
+var items = selection,
+    i = items.length - 1,
+    target = selection[i],
+    isGroup = false;
 
-selection.each(function (item, i) {
-    if (i !== length) {
-        var group = item.group();
-        target.duplicate(item, ElementPlacement.PLACEAFTER);
-        group.clipped = true;
-        item.clipping = true;
+if (i > 0) {
+    if (i === 1 && selection[0].typename === 'GroupItem') {
+        items = selection[0].pageItems;
+        i = items.length;
+        isGroup = selection[0];
     }
-        else {
-            target.remove();
-        }
-});
+
+    while (i--) {
+        // create and move to group
+        var group = activeDocument.groupItems.add();
+        group.move((isGroup ? target : items[i]), ElementPlacement[(isGroup ? 'PLACEBEFORE' : 'PLACEAFTER')]);
+
+        // duplicate target object and move items
+        target.duplicate().moveToBeginning(group);
+        items[i].moveToBeginning(group);
+
+        // set properties
+        group.clipped = true;
+        if (!isGroup) items[i].clipping = true;
+    }
+
+    if (isGroup) isGroup.remove();
+    target.remove();
+}

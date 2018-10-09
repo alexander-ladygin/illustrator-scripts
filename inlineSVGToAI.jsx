@@ -61,12 +61,26 @@ function uiDialog() {
 }
 
 function importSVG(string) {
-  var svgFileName = "inlineSVGtoAI.svg";
-  var svgFile = new File("" + Folder.temp + "/" + svgFileName);
+  var svgFileName = "inlineSVGtoAI.svg",
+    svgFile = new File("" + Folder.temp + "/" + svgFileName),
+    backDoc = activeDocument;
+
   svgFile.open("w");
   svgFile.write(string);
   svgFile.close();
-  app.activeDocument.importFile(svgFile, false);
+  if (activeDocument.importFile instanceof Function) {
+    activeDocument.importFile(svgFile, false, false, false);
+  }
+    else {
+      app.open(svgFile);
+      var l = activeDocument.layers,
+      i = l.length;
+      while (i--) { l[i].hasSelectedArtwork = true; }
+      app.copy();
+      activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+      backDoc.activate();
+      app.paste();
+    }
   $.sleep(500);
   svgFile.remove();
 }

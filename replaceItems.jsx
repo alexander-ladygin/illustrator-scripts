@@ -6,7 +6,6 @@
   Copyright (c) 2018
 
 */
-#include './libraries/AI_PS_Library.js';
 var win = new Window('dialog', 'Replace items', undefined);
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
@@ -100,25 +99,28 @@ function startAction() {
             if (currentRadio.value && !i) break;
             var item = items[i],
                 node = getNode().duplicate(item, ElementPlacement.PLACEBEFORE),
-                __fn = 'Width';
+                __fn = 'height',
+                __fnReverse = 'width';
 
-            if (node.height >= node.width) __fn = 'Height';
+            if (node.height >= node.width) {
+                __fn = 'width';
+                __fnReverse = 'height';
+            }
 
             if (randomRotateCheckbox.value) randomRotation(node);
 
             if (!copyWHCheckbox.value) {
-                node[__fn]((item.height >= item.width ? item.width : item.height) * __ratio, {
-                        constrain: true,
-                        anchor: 'center'
-                    });
+                var __size = (item.height >= item.width ? item.width : item.height) * __ratio,
+                    precent = __size * 100 / node[__fn] / 100;
+
+                node[__fn] = __size;
+                node[__fnReverse] *= precent;
                 node.left = item.left - (node.width - item.width) / 2;
                 node.top = item.top + (node.height - item.height) / 2;
             }
                 else {
-                    node.attr({
-                        width: item.width,
-                        height: item.height
-                    })
+                    node.width = item.width;
+                    node.height = item.height;
                     node.left = item.left - (node.width - item.width) / 2;
                     node.top = item.top + (node.height - item.height) / 2;
                 }

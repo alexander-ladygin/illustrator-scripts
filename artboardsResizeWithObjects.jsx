@@ -226,38 +226,40 @@ var win = new Window('dialog', 'Resize artboard with objects', undefined);
     winArtActive.onClick = winArtAll.onClick = function (e) { winArtNum.enabled = false; };
 
 
-function getCustomNumbers ($str) {
+function getCustomNumbers ($str, items, returnItems) {
     var __num = $str.replace(/ /g, '').replace(/[^-0-9^,]/gim,'').split(','),
-        maxArts = activeDocument.artboards.length,
+        $maxItems = items.length,
         j = __num.length,
         arr = [];
-
+    
     function getNumbersBetweenMinMax (min, max) {
         var numbers = [];
         for (var n = min; n <= max; n++) {
-            numbers.push(n);
+            if (n < $maxItems) {
+                numbers.push(returnItems ? items[n] : n);
+            }
         }
         return numbers;
     }
-
+    
     while (j--) {
         if (__num[j].indexOf('-') > -1) {
             var values = __num[j].split('-'),
                 min = parseInt(values[0]),
                 max = parseInt(values[1]);
-
+    
             if (!isNaN(min) && !isNaN(max)) arr = arr.concat(getNumbersBetweenMinMax(min - 1, max - 1));
         }
             else {
                 var __val = parseInt(__num[j]);
-                if (!isNaN(__val) && __val <= maxArts) {
-                    arr.push(__val - 1);
+                if (!isNaN(__val) && __val <= $maxItems) {
+                    arr.push(returnItems ? items[__val - 1] : __val - 1);
                 }
             }
     }
-
+    
     return arr;
-}
+    }
 
 
 function startAction() {
@@ -278,7 +280,7 @@ function startAction() {
             }
         }
             else {
-                var arr = getCustomNumbers(winArtNum.text),
+                var arr = getCustomNumbers(winArtNum.text, activeDocument.artboards),
                     i = arr.length;
                 while (i--) {
                     activeDocument.artboards.setActiveArtboardIndex(arr[i]);

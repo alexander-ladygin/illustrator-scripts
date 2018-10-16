@@ -11,7 +11,7 @@ if (app.documents.length) {
     function getCustomNumbers ($str, items, returnItems) {
         var __num = $str.replace(/ /g, '').replace(/[^-0-9^,]/gim,'').split(','),
             $maxItems = items.length,
-            j = __num.length,
+            l = __num.length,
             arr = [];
 
         function getNumbersBetweenMinMax (min, max) {
@@ -24,7 +24,7 @@ if (app.documents.length) {
             return numbers;
         }
 
-        while (j--) {
+        for (var j = 0; j < l; j++) {
             if (__num[j].indexOf('-') > -1) {
                 var values = __num[j].split('-'),
                     min = parseInt(values[0]),
@@ -57,16 +57,16 @@ if (app.documents.length) {
 
 
     function __artboardItemsMoveToNewLayer (__artNumbers) {
-        __artNumbers = (__artNumbers instanceof Array ? __artNumbers : []);
-
         var arts = activeDocument.artboards,
-            l = __artNumbers.length ? __artNumbers.length : arts.length;
+            l = __artNumbers.length;
 
         selection = null;
 
-        function __move (items) {
+        function __move (items, __index) {
             var layer = activeDocument.layers.add(),
                 j = items.length;
+
+            if (layerNameCheckbox.value) layer.name = arts[__index].name;
 
             while (j--) {
                 items[j].moveToBeginning(layer);
@@ -74,9 +74,9 @@ if (app.documents.length) {
         }
 
         for (var i = 0; i < l; i++) {
-            activeDocument.artboards.setActiveArtboardIndex(i);
+            activeDocument.artboards.setActiveArtboardIndex(__artNumbers[i]);
             activeDocument.selectObjectsOnActiveArtboard();
-            __move(selection);
+            __move(selection, __artNumbers[i]);
             selection = null;
         }
 
@@ -106,12 +106,13 @@ if (app.documents.length) {
     var customArts = panel.add('edittext', undefined, activeDocument.artboards.getActiveArtboardIndex() + 1);
         customArts.enabled = false;
 
-    var panelCheckbox = win.add('panel', undefined, 'Clear empty:');
+    var panelCheckbox = win.add('panel');
         panelCheckbox.orientation = 'column';
         panelCheckbox.alignChildren = ['fill', 'fill'];
-        panelCheckbox.margins = 20;
+        panelCheckbox.margins = 10;
 
-    var removeEmptyLayersCheckbox = panelCheckbox.add('checkbox', undefined, 'Layers & Sub layers');
+    var removeEmptyLayersCheckbox = panelCheckbox.add('checkbox', undefined, 'Clear empty layers & sub layers'),
+        layerNameCheckbox = panelCheckbox.add('checkbox', undefined, 'Layer name from the artboard name');
 
     var winButtons = win.add('group');
         winButtons.orientation = 'row';
@@ -129,9 +130,7 @@ if (app.documents.length) {
     function startAction() {
         var __arts = [];
 
-        if (customArtboardsRadio.value) {
-            __arts = getCustomNumbers(customArts.text, activeDocument.artboards);
-        }
+        __arts = getCustomNumbers((customArtboardsRadio.value ? customArts.text : ('1-' + activeDocument.artboards.length)), activeDocument.artboards);
 
         __artboardItemsMoveToNewLayer(__arts);
 

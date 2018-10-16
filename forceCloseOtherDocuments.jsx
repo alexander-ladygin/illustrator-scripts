@@ -113,6 +113,7 @@ var docGroup = panel.add('group');
 
 var docPlaceholder = docGroup.add('statictext', undefined, 'Only read'),
   docList = docGroup.add('dropdownlist', undefined, getDocumentToList());
+  docList.maximumSize = [115, 25];
   docList.selection = 0;
 
 var winButtons = win.add('group');

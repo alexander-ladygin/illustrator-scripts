@@ -3,7 +3,9 @@
   Author: Alexander Ladygin (i@ladygin.pro)
   Program version: Adobe Illustrator CC+
   Name: createArtboardsFromTheSelection.jsx;
+
   Copyright (c) 2018
+  www.ladygin.pro
 
 */
 

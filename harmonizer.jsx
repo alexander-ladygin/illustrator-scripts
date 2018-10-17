@@ -4,7 +4,9 @@
   Name: harmonizer.jsx;
 
   Author: Alexander Ladygin, email: i@ladygin.pro
+
   Copyright (c) 2018
+  www.ladygin.pro
 
 */
 var isUndo = false, isRandomOrder = false,
@@ -143,11 +145,16 @@ function startAction() {
                 else return 0;
     }
 
-    for (var i = j = 0; i < l; i++, j++) {
-        if (j === columns) { __rows++; j = 0; }
-        items[i].left = bnds[0] + (bnds[4] + gutter.x) * j + __align(__posXValue, items[i][bounds]);
-        items[i].top = bnds[1] - (bnds[5] + gutter.y) * __rows - __align(__posYValue, items[i][bounds]);
+    if (l > 1) {
+        for (var i = j = 0; i < l; i++, j++) {
+            if (j === columns) { __rows++; j = 0; }
+            items[i].left = bnds[0] + (bnds[4] + gutter.x) * j + __align(__posXValue, items[i][bounds]);
+            items[i].top = bnds[1] - (bnds[5] + gutter.y) * __rows - __align(__posYValue, items[i][bounds]);
+        }
     }
+        else {
+            isUndo = false;
+        }
 }
 
 

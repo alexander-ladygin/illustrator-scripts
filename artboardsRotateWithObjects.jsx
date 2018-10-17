@@ -7,6 +7,7 @@
           Sergey Osokin, email: hi@sergosokin.ru
 
   Copyright (c) 2018
+  www.ladygin.pro
 
 */
 

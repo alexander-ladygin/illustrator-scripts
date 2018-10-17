@@ -3,7 +3,9 @@
   Author: Alexander Ladygin (i@ladygin.pro)
   Program version: Adobe Illustrator CC+
   Name: replaceItems.jsx;
+
   Copyright (c) 2018
+  www.ladygin.pro
 
 */
 var win = new Window('dialog', 'Replace items', undefined);

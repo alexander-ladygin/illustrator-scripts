@@ -4,7 +4,9 @@
   Name: artboardItemsMoveToNewLayer.jsx;
 
   Author: Alexander Ladygin, email: i@ladygin.pro
+
   Copyright (c) 2018
+  www.ladygin.pro
 
 */
 if (app.documents.length) {

@@ -3797,41 +3797,74 @@ if ($.appName.illustrator) {
     };
     Object.prototype.scale = function (w, h, t_obj, t_fillpatt, t_fillgrad, t_strokepatt) {
         scale = [w || 100, h || w];
+
+        t_obj = (typeof t_obj === 'boolean' ? t_obj : true);
+        t_fillpatt = (typeof t_fillpatt === 'boolean' ? t_fillpatt : true);
+        t_fillgrad = (typeof t_fillgrad === 'boolean' ? t_fillgrad : true);
+        t_strokepatt = (typeof t_strokepatt === 'boolean' ? t_strokepatt : true);
+
         function toScale(item, size) {
             var random_value = 10 + Math.floor(Math.random() * 170);
+
             if ((size[0] === 'random') && (size[1] instanceof Array)) {
                 var _value = size[1][0] + Math.floor(Math.random() * (size[1][1] - size[1][0]));
                 size = [_value, _value];
             }
-            else if ((size[0] === 'random') && (size[2] !== 'random')) {
-                size = [random_value, random_value];
-            }
-            else if ((size[0] === 'random') && (size[2] === 'random')) {
-                size = [10 + Math.floor(Math.random() * 170), 10 + Math.floor(Math.random() * 170)];
-            }
+                else if ((size[0] === 'random') && (size[2] !== 'random')) {
+                    size = [random_value, random_value];
+                }
+                else if ((size[0] === 'random') && (size[2] === 'random')) {
+                    size = [10 + Math.floor(Math.random() * 170), 10 + Math.floor(Math.random() * 170)];
+                }
+
             item.resize(size[0], size[1] || size[0], t_obj, t_fillpatt, t_fillgrad, t_strokepatt);
         }
+
         var obj = LA(this);
         for (var i = 0; i < obj.length; i++) {
             toScale(obj[i], scale);
         }
+
         return this;
     };
-    Object.prototype.rotation = function (deg, t_obj, t_fillpatt, t_fillgrad, t_strokepatt) {
-        function rotate(item, size) {
-            if (item.typename) {
-                if (item.typename !== 'Artboard') item.rotate(size, t_obj, t_fillpatt, t_fillgrad, t_strokepatt);
-                else if (size === 90) {
-                    var width = item.Width(),
-                        height = item.Height();
-                    item.Width(height, { anchor: t_obj }).Height(width, { anchor: t_obj });
-                }
+    Object.prototype.rotation = function (degMin, degMax, t_obj, t_fillpatt, t_fillgrad, t_strokepatt) {
+        __value = degMin;
+
+        if ((degMin !== 'random') && (degMax === undefined)) __value = [degMin];
+            else if (((degMin === 'random') && (degMax instanceof Array)) || ((typeof degMin === 'number') && (typeof degMax === 'number'))) __value = [degMin, degMax];
+
+        t_obj = (typeof t_obj === 'boolean' ? t_obj : true);
+        t_fillpatt = (typeof t_fillpatt === 'boolean' ? t_fillpatt : true);
+        t_fillgrad = (typeof t_fillgrad === 'boolean' ? t_fillgrad : true);
+        t_strokepatt = (typeof t_strokepatt === 'boolean' ? t_strokepatt : true);
+
+        function toRotate(item, _val) {
+            var $value = [],
+                random_value = Math.floor(Math.random() * 360);
+
+            if (_val.length === 1 && typeof _val[0] === 'number') {
+                $value = [_val[0]];
             }
+                if ((_val[0] === 'random') && (_val[1] instanceof Array)) {
+                    var $value = _val[1][0] + Math.floor(Math.random() * (_val[1][1] - _val[1][0]));
+                    $value = [$value];
+                }
+                else if ((typeof _val[0] === 'number') && (typeof _val[1] === 'number')) {
+                    var $value = _val[0] + Math.floor(Math.random() * (_val[1] - _val[0]));
+                    $value = [$value];
+                }
+                else if (_val[0] === 'random') {
+                    $value = [random_value];
+                }
+
+            item.rotate($value[0], t_obj, t_fillpatt, t_fillgrad, t_strokepatt);
+
         }
-        var obj = LA(this), value;
+        var obj = LA(this);
         for (var i = 0; i < obj.length; i++) {
-            rotate(obj[i], deg === 'random' ? value = Math.floor(Math.random() * 360) : value = deg);
+            toRotate(obj[i], __value);
         }
+
         return this;
     };
     Object.prototype.Translate = function (x, y, t_obj, t_fillpatt, t_fillgrad, t_strokepatt) {
@@ -4352,7 +4385,7 @@ if ($.appName.illustrator) {
         unlock(this instanceof Array ? this : LA(this));
         return this;
     };
-    Object.prototype.Opacity = function (value) {
+    Object.prototype.Opacity = function (value, __randomValues) {
         /*
         * value : Number or String
         * Example: selection.opacity(50)
@@ -4360,8 +4393,9 @@ if ($.appName.illustrator) {
         * Example: selection.opacity()
         * return new array 
         */
+       __randomValues = (__randomValues instanceof Array && __randomValues.length > 1 ? __randomValues : [5, 95]);
         function set(item, val) {
-            val === 'random' ? val = Math.floor(5 + Math.random() * 95) : val = parseFloat(val) || item.opacity;
+            val === 'random' ? val = Math.floor(__randomValues[0] + Math.random() * (__randomValues[1] - __randomValues[0])) : val = parseFloat(val) || item.opacity;
             arr.push(val);
             item.opacity = val;
         }
@@ -4434,6 +4468,65 @@ if ($.appName.illustrator) {
                     }
                     else {
                         type === false ? obj[i].textRange.characterAttributes.filled = false : obj[i].textRange.characterAttributes.fillColor = $.color(type, values);
+                    }
+                }
+            }
+        }
+        return this;
+    };
+    Object.prototype.strokecolor = function (type, values) {
+        /*
+        * Example: activeDocument.pathItems.strokecolor('hex', '00c8ff');
+        * return the same items and replace the color
+        * Example: activeDocument.pathItems.strokecolor(false);
+        * returns the same items and disable stroked
+        */
+        var obj = LA(this),
+            swatches = activeDocument.swatches.getSelected(),
+            swatchesLength = swatches.length;
+
+        if (!swatchesLength) {
+            swatches = activeDocument.swatches;
+            swatchesLength = swatches.length;
+        }
+
+        for (var i = 0; i < obj.length; i++) {
+            if ((obj[i].typename === 'GroupItem') || (obj[i].typename === 'CompoundPathItem')) {
+                obj[i].children().strokecolor(type, values);
+            }
+            else {
+                if (obj[i].strokeColor && !obj[i].clipping && !obj[i].guides) {
+                    if (type === 'random') {
+                        obj[i].strokeColor = $.color($.getColorMode('shortname'), 'random');
+                    }
+                    else if ((type === 'darken') || (type === 'lighten')) {
+                        obj[i].strokeColor = $['color' + type.slice(0,1).toUpperCase() + type.slice(1)](obj[i].strokeColor, values);
+                    }
+                    else if (type === 'swatches') {
+                        obj[i].strokeColor = swatches[Math.floor(Math.random() * swatchesLength)].color;
+                    }
+                    else if ($.isColor(type)) {
+                        if (obj[i].strokeColor) obj[i].strokeColor = type;
+                    }
+                    else {
+                        type === false ? obj[i].stroked = false : obj[i].strokeColor = $.color(type, values);
+                    }
+                }
+                else if (obj[i].textRange) {
+                    if (type === 'random') {
+                        obj[i].textRange.characterAttributes.strokeColor = $.color($.getColorMode('shortname'), 'random');
+                    }
+                    else if ((type === 'darken') || (type === 'lighten')) {
+                        obj[i].strokeColor = $['color' + type.slice(0,1).toUpperCase() + type.slice(1)](obj[i].strokeColor, values);
+                    }
+                    else if (type === 'swatches') {
+                        obj[i].strokeColor = swatches[Math.floor(Math.random() * swatchesLength)].color;
+                    }
+                    else if ($.isColor(type)) {
+                        obj[i].textRange.characterAttributes.strokeColor = type;
+                    }
+                    else {
+                        type === false ? obj[i].textRange.characterAttributes.stroked = false : obj[i].textRange.characterAttributes.strokeColor = $.color(type, values);
                     }
                 }
             }
@@ -5372,7 +5465,10 @@ if ($.appName.illustrator) {
     Object.prototype.orderRandomize = function (inArray) {
         var items = LA(this),
             i = items.length,
+            l = items.length,
             tmpVar, randomIndex;
+
+        alert(l);
 
         if (inArray) while (0 !== i) {
             randomIndex = Math.floor(Math.random() * i);
@@ -5381,10 +5477,10 @@ if ($.appName.illustrator) {
             items[i] = items[randomIndex];
             items[randomIndex] = tmpVar;
         }
-        else while (i--) {
-            var j = Math.floor(Math.random() * l);
-            items[j].zOrder(ZOrderMethod.SENDTOBACK);
-        }
+            else while (i--) {
+                var j = Math.floor(Math.random() * l);
+                items[j].zOrder(ZOrderMethod.SENDTOBACK);
+            }
 
         return !inArray ? this : items;
     };

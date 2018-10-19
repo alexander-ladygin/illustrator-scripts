@@ -1516,6 +1516,7 @@ if ($.appName.illustrator) {
             || (a.typename === 'PlacedItem')
             || (a.typename === 'PluginItem')
             || (a.typename === 'RasterItem')
+            || (a.typename === 'MeshItem')
             || (a.typename === 'SymbolItem')
         ) {
             return false;
@@ -4889,7 +4890,7 @@ if ($.appName.illustrator) {
             convertTextToOutlines: false,
         });
 
-        activeDocument.rasterize(this, rect, options);
+        return activeDocument.rasterize(this, rect, options);
     };
 
 

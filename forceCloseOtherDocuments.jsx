@@ -97,7 +97,7 @@ function getDocumentToList() {
   return result;
 }
 
-var win = new Window('dialog', 'Force close others', undefined);
+var win = new Window('dialog', 'Force close others \u00A9 www.ladygin.pro', undefined);
   win.orientation = 'column';
   win.alignChildren = ['fill', 'fill'];
 
@@ -122,14 +122,14 @@ var winButtons = win.add('group');
   winButtons.orientation = 'row';
   winButtons.alignChildren = ['fill', 'fill'];
 
+var cancel = winButtons.add('button', undefined, 'Cancel');
+  cancel.helpTip = 'Press Esc to Close';
+  cancel.onClick = function () { win.close(); }
+
   var ok = winButtons.add('button', undefined, 'OK');
   ok.helpTip = 'Press Enter to Run';
   ok.onClick = startAction;
   ok.active = true;
-  
-var cancel = winButtons.add('button', undefined, 'Cancel');
-  cancel.helpTip = 'Press Esc to Close';
-  cancel.onClick = function () { win.close(); }
 
 win.center();
 win.show();

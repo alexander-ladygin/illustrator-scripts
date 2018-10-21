@@ -87,7 +87,7 @@ if (app.documents.length) {
 
     var selectionBak = selection;
 
-    var win = new Window('dialog', 'Artboards items move to new layer', undefined);
+    var win = new Window('dialog', 'Artboards items move to new layer \u00A9 www.ladygin.pro', undefined);
         win.orientation = 'column';
         win.alignChildren = ['fill', 'fill'];
 
@@ -120,14 +120,14 @@ if (app.documents.length) {
         winButtons.orientation = 'row';
         winButtons.alignChildren = ['fill', 'fill'];
 
+    var cancel = winButtons.add('button', undefined, 'Cancel');
+        cancel.helpTip = 'Press Esc to Close';
+        cancel.onClick = function () { win.close(); }
+
     var ok = winButtons.add('button', undefined, 'OK');
         ok.helpTip = 'Press Enter to Run';
         ok.onClick = startAction;
         ok.active = true;
-
-    var cancel = winButtons.add('button', undefined, 'Cancel');
-        cancel.helpTip = 'Press Esc to Close';
-        cancel.onClick = function () { win.close(); }
 
     function startAction() {
         var __arts = [];

@@ -8,7 +8,7 @@
   www.ladygin.pro
 
 */
-var win = new Window('dialog', 'Replace items', undefined);
+var win = new Window('dialog', 'Replace items \u00A9 www.ladygin.pro', undefined);
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 
@@ -48,14 +48,14 @@ var panelCheckboxes = win.add('panel');
     winButtons.alignChildren = 'center';
     winButtons.margins = [0, 0, 0, 0];
 
+    var cancel = winButtons.add('button', undefined, 'Cancel');
+    cancel.helpTip = 'Press Esc to Close';
+    cancel.onClick = function () { win.close(); }
+
     var ok = winButtons.add('button', [0, 0, 100, 30], 'OK');
     ok.helpTip = 'Press Enter to Run';
     ok.onClick = startAction;
     ok.active = true;
-
-    var cancel = winButtons.add('button', undefined, 'Cancel');
-    cancel.helpTip = 'Press Esc to Close';
-    cancel.onClick = function () { win.close(); }
 
     var progressBar = win.add('progressbar', [0, 0, 110, 5]),
         progressBarCounter = 100;

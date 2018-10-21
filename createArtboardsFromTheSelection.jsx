@@ -9,7 +9,7 @@
 
 */
 
-var win = new Window('dialog', 'Create artboard from the selection');
+var win = new Window('dialog', 'Create artboard from the selection \u00A9 www.ladygin.pro');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 
@@ -35,14 +35,14 @@ var winButtons = win.add('group');
     winButtons.alignChildren = 'center';
     winButtons.margins = [0, 0, 0, 0];
 
+    var cancel = winButtons.add('button', undefined, 'Cancel');
+    cancel.helpTip = 'Press Esc to Close';
+    cancel.onClick = function () { win.close(); }
+
     var ok = winButtons.add('button', [0, 0, 100, 30], 'OK');
     ok.helpTip = 'Press Enter to Run';
     ok.onClick = startAction;
     ok.active = true;
-
-    var cancel = winButtons.add('button', undefined, 'Cancel');
-    cancel.helpTip = 'Press Esc to Close';
-    cancel.onClick = function () { win.close(); }
 
 
 function startAction() {

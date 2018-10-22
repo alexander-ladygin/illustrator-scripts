@@ -3524,17 +3524,15 @@ if ($.appName.illustrator) {
         var options = {
             replace: false
         }.extend(userOptions || {}, true);
-
-
+    
         var __doc = activeDocument,
             __swatches = LA(this).getSwatchesSaveStructure();
-
+    
         // without group swatches
         LA(__swatches.swatches, function (swatch, i) {
             if (swatch.name !== '[Registration]' && swatch.name !== '[None]') {
                 try {
                     var swatchOriginal = __doc.swatches.getByName(swatch.name);
-
                     if (options.replace) {
                         swatchOriginal.color = swatch.color;
                     }
@@ -3553,14 +3551,48 @@ if ($.appName.illustrator) {
                     }
             }
         });
+        function checkName (name, items) {
+            var x = items.length;
+            while (x--) if (items[x].name === name) return items[x];
+            return false;
+        }
         
         // group swatches
-        LA(__swatches.groups, function (group, i) {
-            __doc.addSwatches('group', {
-                name: group.name,
-                swatches: group.swatches
+        if (!options.replace) {
+            LA(__swatches.groups, function (group, i) {
+                __doc.addSwatches('group', {
+                    name: group.name,
+                    swatches: group.swatches
+                });
             });
-        });
+        }
+            else {
+                LA(__swatches.groups, function (group, i) {
+                    try {
+                        var __group = __doc.swatchGroups.getByName(group.name),
+                            replaceSwatch, $gswatch;
+    
+                        for (var j = 0; j < group.swatches.length; j++) {
+                            replaceSwatch = checkName(group.swatches[j].name, __group.getAllSwatches());
+                            if (replaceSwatch) {
+                                replaceSwatch.color = group.swatches[j].color;
+                            }
+                                else {
+                                    $gswatch = __doc.swatches.add();
+                                    $gswatch.name = group.swatches[j].name;
+                                    $gswatch.color = group.swatches[j].color;
+                                    __group.addSwatch($gswatch);
+                                }
+                        }
+                    }
+                        catch (e) {
+                            __doc.addSwatches('group', {
+                                name: group.name,
+                                swatches: group.swatches
+                            });
+                        }
+                });
+            }
     };
 
 
@@ -4462,7 +4494,9 @@ if ($.appName.illustrator) {
                         obj[i].fillColor = $['color' + type.slice(0,1).toUpperCase() + type.slice(1)](obj[i].fillColor, values);
                     }
                     else if (type === 'swatches') {
-                        obj[i].fillColor = swatches[Math.floor(Math.random() * swatchesLength)].color;
+                        var __clr = swatches[Math.floor(Math.random() * swatchesLength)].color;
+                        if (__clr.typename !== 'GradientColor' && __clr.typename !== 'NoColor') obj[i].textRange.characterAttributes.fillColor = __clr;
+                            else obj[i].fill('random');
                     }
                     else if ($.isColor(type)) {
                         obj[i].textRange.characterAttributes.fillColor = type;
@@ -4521,7 +4555,9 @@ if ($.appName.illustrator) {
                         obj[i].strokeColor = $['color' + type.slice(0,1).toUpperCase() + type.slice(1)](obj[i].strokeColor, values);
                     }
                     else if (type === 'swatches') {
-                        obj[i].strokeColor = swatches[Math.floor(Math.random() * swatchesLength)].color;
+                        var __clr = swatches[Math.floor(Math.random() * swatchesLength)].color;
+                        if (__clr.typename !== 'GradientColor' && __clr.typename !== 'NoColor') obj[i].strokeColor = __clr;
+                            else obj[i].strokecolor('random');
                     }
                     else if ($.isColor(type)) {
                         obj[i].textRange.characterAttributes.strokeColor = type;

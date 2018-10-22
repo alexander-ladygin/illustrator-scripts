@@ -9,6 +9,7 @@
   www.ladygin.pro
 
 */
+#include './libraries/AI_PS_Library.js';
 
 var __attr = {
         width: 120,

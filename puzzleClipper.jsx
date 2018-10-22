@@ -1,7 +1,7 @@
 /* 
 
   Author: Alexander Ladygin (i@ladygin.pro)
-  Program version: Adobe Illustrator CC+
+  Program version: Adobe Illustrator CS5+
   Name: puzzleClipper.jsx;
   Copyright (c) 2018
 

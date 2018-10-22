@@ -26,7 +26,7 @@ try {
             hiddenItems = new Array();
 
         // Create Main Window
-        var dlg = new Window('dialog', scriptName + ' ver.' + scriptVersion, undefined);
+        var dlg = new Window('dialog', scriptName + ' ver.' + scriptVersion + ' \u00A9 www.ladygin.pro', undefined);
         dlg.orientation = 'column';
         dlg.alignChildren = ['fill', 'fill'];
 
@@ -52,13 +52,13 @@ try {
         var btns = dlg.add('group');
         btns.alignChildren = ['fill', 'fill'];
         btns.margins = [0, 10, 0, 0];
+        var cancel = btns.add('button', undefined, 'Cancel', {name: 'cancel'});
+        cancel.helpTip = 'Press Esc to Close';
+        cancel.onClick = function () { dlg.close(); }
         var ok = btns.add('button', undefined, 'OK', {name: 'ok'});
         ok.helpTip = 'Press Enter to Run';
         ok.active = true;
         ok.onClick = okClick;
-        var cancel = btns.add('button', undefined, 'Cancel', {name: 'cancel'});
-        cancel.helpTip = 'Press Esc to Close';
-        cancel.onClick = function () { dlg.close(); }
 
         selection = null;
         app.redraw();

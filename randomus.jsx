@@ -18,7 +18,7 @@ var __attr = {
     },
     isUndo = true,
     undoCount = 0,
-    win = new Window('dialog', 'Randomus', undefined);
+    win = new Window('dialog', 'Randomus \u00A9 www.ladygin.pro', undefined);
     win.orientation = 'column';
     win.alignChildren = 'fill';
 
@@ -247,6 +247,14 @@ var winButtons = win.add('group');
     winButtons.alignChildren = ['fill', 'fill'];
     winButtons.margins = 0;
 
+var cancel = winButtons.add('button', undefined, 'Cancel');
+    cancel.helpTip = 'Press Esc to Close';
+    cancel.onClick = function () { win.close(); }
+
+var reset = winButtons.add('button', undefined, 'Reset');
+    reset.helpTip = 'Reset script result';
+    reset.onClick = function () { __resetAction(); }
+
 var ok = winButtons.add('button', undefined, 'OK');
     ok.helpTip = 'Press Enter to Run';
     ok.onClick = function (e) {
@@ -254,14 +262,6 @@ var ok = winButtons.add('button', undefined, 'OK');
         win.close();
     };
     ok.active = true;
-
-var reset = winButtons.add('button', undefined, 'Reset');
-    reset.helpTip = 'Reset script result';
-    reset.onClick = function () { __resetAction(); }
-
-var cancel = winButtons.add('button', undefined, 'Cancel');
-    cancel.helpTip = 'Press Esc to Close';
-    cancel.onClick = function () { win.close(); }
 
 
 function __resetAction() {

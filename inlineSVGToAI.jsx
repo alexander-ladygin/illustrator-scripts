@@ -1,6 +1,6 @@
 /* 
 
-  Program version: Adobe Illustrator CC 2014+
+  Program version: Adobe Illustrator CS5+
   Name: inlineSVGToAI.jsx;
 
   Author: Alexander Ladygin, email: i@ladygin.pro
@@ -28,7 +28,7 @@ function main() {
 
 // Create dialog window
 function uiDialog() {
-  var win = new Window("dialog", "Inline SVG To AI", undefined),
+  var win = new Window("dialog", "Inline SVG To AI \u00A9 www.ladygin.pro", undefined),
     winPanel = win.add("panel");
     winPanel.alignChildren = ['fill', 'fill'];
 
@@ -41,8 +41,14 @@ function uiDialog() {
 
   // Buttons
   var winButtonsGroup = win.add("group"),
-    pasteButton = winButtonsGroup.add("button", [0, 0, 100, 30], "Paste"),
-    closeButton = winButtonsGroup.add("button", [0, 0, 100, 30], "Cancel");
+    closeButton = winButtonsGroup.add("button", [0, 0, 100, 30], "Cancel"),
+    pasteButton = winButtonsGroup.add("button", [0, 0, 100, 30], "Paste");
+
+
+  // Close window
+  closeButton.onClick = function () {
+    win.close();
+  };
 
   // Paste button action
   pasteButton.onClick = function () {
@@ -53,11 +59,6 @@ function uiDialog() {
     } else {
       alert("You didn't insert the SVG code.");
     }
-  };
-
-  // Close window
-  closeButton.onClick = function () {
-    win.close();
   };
 
   function importSVG(string) {

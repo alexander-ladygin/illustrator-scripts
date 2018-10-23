@@ -16,9 +16,50 @@ var __attr = {
     },
     isUndo = true,
     undoCount = 0,
+    swatchDisabled = false,
+    $selection = selection,
     win = new Window('dialog', 'Randomus \u00A9 www.ladygin.pro', undefined);
     win.orientation = 'column';
     win.alignChildren = 'fill';
+
+function compoundFixAction ($items) {
+    function __ungroup (__items) {
+        var l = __items.length;
+        for (var i = 0; i < l; i++) {
+            if (__items[i].typename === 'GroupItem') {
+                var j = __items[i].pageItems.length;
+                while (j--) { __items[i].pageItems[0].moveBefore(__items[i]); }
+                __items[i].remove();
+            }
+        }
+    }
+
+    function compoundFix (item) {
+        selection = [item];
+        app.executeMenuCommand('noCompoundPath');
+        __ungroup(selection);
+        app.executeMenuCommand('compoundPath');
+        selection = null;
+    }
+
+    function compoundPathItemsNormalize (items) {
+        var i = items.length;
+        while (i--) {
+            if (items[i].typename === 'GroupItem') {
+                compoundPathItemsNormalize(items[i].pageItems);
+            }
+                else {
+                    if (items[i].typename === 'CompoundPathItem' && !items[i].pathItems.length) {
+                        compoundFix(items[i]);
+                    }
+                }
+        }
+    }
+    compoundPathItemsNormalize($items);
+    selection = $selection;
+}
+
+compoundFixAction(activeDocument.compoundPathItems);
 
 function rvbn (min, max) {
     // random value between numbers 
@@ -155,10 +196,10 @@ function __action (callback) {
 }
 
 function getChildren() {
-    var __arr = [], i = selection.length;
+    var __arr = [], i = $selection.length;
     while (i--) {
-        if (selection[i].typename === 'GroupItem') __arr = __arr.concat(selection[i].children());
-            else __arr.push(selection[i]);
+        if ($selection[i].typename === 'GroupItem') __arr = __arr.concat($selection[i].children());
+            else __arr.push($selection[i]);
     }
     return __arr;
 }
@@ -166,12 +207,13 @@ function getChildren() {
 
     __FillColor.onClick = function() {
         __action(function() {
-            selection.fill((!__fillStrokeColorAll.value ? 'random' : $.color($.getColorMode('shortname'), 'random')));
+            $selection.fill((!__fillStrokeColorAll.value ? 'random' : $.color($.getColorMode('shortname'), 'random')));
+            __FillSwatches.enabled = true;
         });
     };
     __FillSwatches.onClick = function() {
         __action(function() {
-            if (!__fillStrokeSwatchesAll.value) selection.fill('swatches');
+            if (!__fillStrokeSwatchesAll.value) $selection.fill('swatches');
                 else {
                     var __swatches = activeDocument.swatches.getSelected(),
                         __swatchesLength = __swatches.length;
@@ -179,20 +221,22 @@ function getChildren() {
                     if (__swatchesLength < 2) {
                         __swatches = activeDocument.swatches;
                         __swatchesLength = __swatches.length;
+                        __FillSwatches.enabled = false;
                     }
 
-                    selection.fill(__swatches[Math.floor(Math.random() * __swatchesLength)].color);
+                    $selection.fill(__swatches[Math.floor(Math.random() * __swatchesLength)].color);
                 }
         });
     };
     __StrokeColor.onClick = function() {
         __action(function() {
-            selection.strokecolor((!__fillStrokeColorAll.value ? 'random' : $.color($.getColorMode('shortname'), 'random')));
+            $selection.strokecolor((!__fillStrokeColorAll.value ? 'random' : $.color($.getColorMode('shortname'), 'random')));
+            __StrokeSwatches.enabled = true;
         });
     };
     __StrokeSwatches.onClick = function() {
         __action(function() {
-            if (!__fillStrokeSwatchesAll.value) selection.strokecolor('swatches');
+            if (!__fillStrokeSwatchesAll.value) $selection.strokecolor('swatches');
                 else {
                     var __swatches = activeDocument.swatches.getSelected(),
                         __swatchesLength = __swatches.length;
@@ -200,9 +244,10 @@ function getChildren() {
                     if (__swatchesLength < 2) {
                         __swatches = activeDocument.swatches;
                         __swatchesLength = __swatches.length;
+                        __StrokeSwatches.enabled = false;
                     }
 
-                    selection.strokecolor(__swatches[Math.floor(Math.random() * __swatchesLength)].color);
+                    $selection.strokecolor(__swatches[Math.floor(Math.random() * __swatchesLength)].color);
                 }
         });
     };
@@ -210,33 +255,33 @@ function getChildren() {
         var __value = [parseFloat(__ScaleMin.text), parseFloat(__ScaleMax.text)];
         __action(function() {
             if (__ScaleEach.value) getChildren().scale('random', __value);
-                else selection.scale('random', __value);
+                else $selection.scale('random', __value);
         });
     };
     __Rotate.onClick = function() {
         var __value = [parseFloat(__RotateMin.text), parseFloat(__RotateMax.text)];
         __action(function() {
             if (__RotateEach.value) getChildren().rotation('random', __value);
-                else selection.rotation('random', __value);
+                else $selection.rotation('random', __value);
         });
     };
     __Opacity.onClick = function() {
         var __value = [parseFloat(__OpacityMin.text), parseFloat(__OpacityMax.text)];
         __action(function() {
             if (__OpacityEach.value) getChildren().Opacity('random', __value);
-                else selection.Opacity('random', __value);
+                else $selection.Opacity('random', __value);
         });
     };
     __PositionX.onClick = function() {
         __action(function() {
             if (__PositionEach.value) getChildren().left(__PositionXvalue.text, 'random');
-                else selection.left(__PositionXvalue.text, 'random');
+                else $selection.left(__PositionXvalue.text, 'random');
         });
     };
     __PositionY.onClick = function() {
         __action(function() {
             if (__PositionEach.value) getChildren().top(__PositionYvalue.text, 'random');
-                else selection.top(__PositionYvalue.text, 'random');
+                else $selection.top(__PositionYvalue.text, 'random');
         });
     };
 

@@ -1,7 +1,7 @@
 /* 
 
   Program version: Adobe Illustrator CS5+
-  Name: artboardResizeWithObjects.js;
+  Name: artboardResizeWithObjects.jsx;
 
   Author: Alexander Ladygin, email: i@ladygin.pro
   Thanks for refactoring and testing - Sergey Osokin, email: hi@sergosokin.ru

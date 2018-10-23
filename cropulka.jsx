@@ -279,6 +279,7 @@ function cropArtboard (artboardIndex, __progressCounter) {
             items: 0,
             image: 0,
         };
+        rectangle.opacity = 0;
 
     // check position item on artboard
     function checkPosition ($item, coords) {
@@ -299,6 +300,7 @@ function cropArtboard (artboardIndex, __progressCounter) {
             __maskRect = __target.pathItems.rectangle(__rect[1], __rect[0], __rect[2] - __rect[0], __rect[1] - __rect[3]),
             __maskItem = __target.pathItems.add(),
             __maskGroup = __target.groupItems.add();
+        __maskRect.opacity = 0;
     
         __maskItem.setEntirePath([
             [bnds[0], bnds[1]],
@@ -415,9 +417,9 @@ function cropArtboard (artboardIndex, __progressCounter) {
         __group.move(item, ElementPlacement.PLACEAFTER);
         item.moveToBeginning(__group);
         __rectangle.moveToBeginning(__group);
-        rectangle.filled = true;
-        rectangle.stroked = false;
-        rectangle.clipping = true;
+        __rectangle.filled = true;
+        __rectangle.stroked = false;
+        __rectangle.clipping = true;
         __group.clipped = true;
 
         selection = null;

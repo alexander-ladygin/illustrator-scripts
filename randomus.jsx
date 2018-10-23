@@ -48,18 +48,14 @@ function compoundFixAction ($items) {
             if (items[i].typename === 'GroupItem') {
                 compoundPathItemsNormalize(items[i].pageItems);
             }
-                else {
-                    if (items[i].typename === 'CompoundPathItem' && !items[i].pathItems.length) {
-                        compoundFix(items[i]);
-                    }
+                else if (items[i].typename === 'CompoundPathItem') {
+                    compoundFix(items[i]);
                 }
         }
     }
     compoundPathItemsNormalize($items);
     selection = $selection;
 }
-
-compoundFixAction(activeDocument.compoundPathItems);
 
 function rvbn (min, max) {
     // random value between numbers 
@@ -285,20 +281,34 @@ function getChildren() {
         });
     };
 
-var winButtons = win.add('group');
+var buttonSize = [0, 0, 150, 30],
+    winButtons = win.add('group');
     winButtons.orientation = 'row';
-    winButtons.alignChildren = ['fill', 'fill'];
+    winButtons.alignChildren = 'center';
     winButtons.margins = 0;
 
-var cancel = winButtons.add('button', undefined, 'Cancel');
-    cancel.helpTip = 'Press Esc to Close';
-    cancel.onClick = function () { win.close(); }
+var winButtons2 = win.add('group');
+    winButtons2.orientation = 'row';
+    winButtons2.alignChildren = 'center';
+    winButtons2.margins = 0;
 
-var reset = winButtons.add('button', undefined, 'Reset');
+var fixCompoundButton = winButtons.add('button', buttonSize, 'Fix compounds');
+    fixCompoundButton.helpTip = 'Normalize compound path items, remove groups - only path items';
+    fixCompoundButton.onClick = function () {
+        compoundFixAction($selection);
+        fixCompoundButton.enabled = false;
+        app.redraw();
+    };
+
+var reset = winButtons.add('button', buttonSize, 'Reset');
     reset.helpTip = 'Reset script result';
     reset.onClick = function () { __resetAction(); }
 
-var ok = winButtons.add('button', undefined, 'OK');
+var cancel = winButtons2.add('button', buttonSize, 'Cancel');
+    cancel.helpTip = 'Press Esc to Close';
+    cancel.onClick = function () { win.close(); }
+
+var ok = winButtons2.add('button', buttonSize, 'OK');
     ok.helpTip = 'Press Enter to Run';
     ok.onClick = function (e) {
         isUndo = false;

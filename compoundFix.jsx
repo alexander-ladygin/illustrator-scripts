@@ -13,7 +13,8 @@ if (app.executeMenuCommand instanceof Function) {
         win.orientation = 'column';
         win.alignChildren = ['fill', 'fill'];
 
-    var panel = win.add('panel');
+    var globalGroup = win.add('group'),
+        panel = globalGroup.add('panel');
         panel.orientation = 'column';
         panel.alignChildren = 'fill';
         panel.margins = 20;
@@ -22,7 +23,7 @@ if (app.executeMenuCommand instanceof Function) {
         radioAll = panel.add('radiobutton', undefined, 'All Compounds');
     radioAll.value = true;
 
-    var winButtons = win.add('group');
+    var winButtons = globalGroup.add('group');
         winButtons.orientation = 'column';
         winButtons.alignChildren = 'fill';
 
@@ -35,7 +36,14 @@ if (app.executeMenuCommand instanceof Function) {
         cancel.helpTip = 'Press Esc to Close';
         cancel.onClick = function () { win.close(); }
 
+    var progressBar = win.add('progressbar', [0, 0, 110, 5]),
+        progressBarCounter = 100;
+        progressBar.value = 0;
+        progressBar.minvalue = 0;
+        progressBar.maxvalue = progressBarCounter;
+
     function compoundFixAction() {
+        globalGroup.enabled = false;
         function __ungroup (__items) {
             var l = __items.length;
             for (var i = 0; i < l; i++) {
@@ -57,15 +65,16 @@ if (app.executeMenuCommand instanceof Function) {
 
         function compoundPathItemsNormalize (items) {
             var i = items.length;
+            progressBarCounter /= i;
             while (i--) {
                 if (items[i].typename === 'GroupItem') {
                     compoundPathItemsNormalize(items[i].pageItems);
                 }
-                    else {
-                        if (items[i].typename === 'CompoundPathItem' && !items[i].pathItems.length) {
-                            compoundFix(items[i]);
-                        }
+                    else if (items[i].typename === 'CompoundPathItem') {
+                        compoundFix(items[i]);
                     }
+                progressBar.value += progressBarCounter;
+                win.update();
             }
         }
 

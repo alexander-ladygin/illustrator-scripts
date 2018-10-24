@@ -1,5 +1,6 @@
+![Illustrator-script www.ladygin.pro](https://dl.dropboxusercontent.com/s/bchln1y7s3r6lqb/illustrator-scripts-github-poster.jpg?dl=0)
 # illustrator-scripts
-### Collection of scripts for adobe illustrator, created or modified by me.
+## Collection of scripts for adobe illustrator, created or modified by me.
 ### **How install:**
 1. Download archive and unzip. All scripts are in the folder jsx
 2. Place <script_name>.jsx in the Illustrator Scripts folder:
@@ -17,7 +18,7 @@ Script to resize on value an document artboards with all the objects on it.
 3. Select the size of the artboard or a percentage of the size, also configure other items
 3. Press button "OK" or press enter
 
-![ArtboardResizeWithObjects](/images/artboardResizeWithObjects.gif)
+![ArtboardResizeWithObjects](https://dl.dropboxusercontent.com/s/et8r3kql8yxw2yx/artboardResizeWithObjects.gif?dl=0)
 
 
 ## **ArtboardsRotateWithObjects**
@@ -28,7 +29,7 @@ Author: Alexander Ladygin. UI: [Sergey Osokin](https://github.com/creold/).
 2. Run script File → Scripts → artboardsRotateWithObjects.jsx
 3. Press button "OK" or press enter
 
-![ArtboardsRotateWithObjects](/images/artboardsRotateWithObjects.gif)
+![ArtboardsRotateWithObjects](https://dl.dropboxusercontent.com/s/kxwaxk6am5hddy9/artboardsRotateWithObjects.gif?dl=0)
 
 
 ## **Harmonizer**
@@ -39,14 +40,14 @@ Sort a lot of objects in Adobe Illustrator is hard. With Harmonizer you can just
 3. Set the desired settings
 4. Press button "OK" or press enter
 
-![Harmonizer](/images/harmonizer.gif)
+![Harmonizer](https://dl.dropboxusercontent.com/s/cyox6jo71bvj85f/harmonizer.gif?dl=0)
 
 
 ## **InlineSVGToAI**
 The script inserts the SVG code as an object from the clipboard into the Adobe Illustrator CC 2014+. Adobe Illustrator CC 2018 v.22.1 (march, 2018) can insert SVG graphics without a script.
 Author: Alexander Ladygin. Code refactoring: [Sergey Osokin](https://github.com/creold/).
 
-![InlineSVGToAI](/images/inlineSVGToAI.gif)
+![InlineSVGToAI](https://dl.dropboxusercontent.com/s/flsk054h1vk2qdf/inlineSVGToAI.gif?dl=0)
 
 
 ## **Cropulka**
@@ -57,7 +58,7 @@ The script cuts all that goes beyond the artboard. This script is ideal for micr
     - The script also cuts the images and the mesh, although the mesh will be rasterized and the picture will lose its connection. Also all raster effects will be separate images.
 3. Press button "OK" or press enter
 
-![Cropulka](/images/cropulka.gif)
+![Cropulka](https://dl.dropboxusercontent.com/s/1g88o9rzo34glrn/cropulka.gif?dl=0)
 
 
 ## **Fillinger**
@@ -69,7 +70,7 @@ A Jongware Script - modified by Alexander Ladygin. The script fills the object w
     - The item to be filled must be either PathItem or CompoundPathItem, the items to be filled can be either in the group or outside the group.
 4. Press button "OK" or press enter
 
-![Fillinger](/images/fillinger.gif)
+![Fillinger](https://dl.dropboxusercontent.com/s/1cacp1azneso5ib/fillinger.gif?dl=0)
 
 
 ## **Randomus**
@@ -86,7 +87,7 @@ The script can:
 3. Press buttons - result in real time
 4. Press "OK" or press enter - confirm changes, or press "Cancel" or press escape - cancel changes
 
-![Randomus](/images/randomus.gif)
+![Randomus](https://dl.dropboxusercontent.com/s/hrooxlfcor2afsn/randomus.gif?dl=0)
 
 
 ## **ReplaceItems**
@@ -98,7 +99,7 @@ Script for replacing objects with objects, the top object, an object from the cl
 3. Run script File → Scripts → replaceItems.jsx
 4. Press "OK" or press enter
 
-![ReplaceItems](/images/replaceItems.gif)
+![ReplaceItems](https://dl.dropboxusercontent.com/s/ajl65b4atapa1q2/replaceItems.gif?dl=0)
 
 
 ## **PuzzleClipper**
@@ -111,7 +112,7 @@ The script makes copies of the last (lowest) object and puts them into a mask ba
 3. Run script File → Scripts → puzzleClipper.jsx
 4. Press "OK" or press enter
 
-![PuzzleClipper](/images/puzzleClipper.gif)
+![PuzzleClipper](https://dl.dropboxusercontent.com/s/gmqafobwmhypzf4/puzzleClipper.gif?dl=0)
 
 
 ## **ArtboardItemsMoveToNewLayer**
@@ -122,7 +123,7 @@ The script places all objects on the artboard in a new layer.
     - If custom is selected, you can specify the numbers of the artboard as pages when printing, for example: 1, 2, 5-8
 3. Press button "OK" or press enter
 
-![ArtboardItemsMoveToNewLayer](/images/artboardItemsMoveToNewLayer.gif)
+![ArtboardItemsMoveToNewLayer](https://dl.dropboxusercontent.com/s/fdvz551f7esk2wq/artboardItemsMoveToNewLayer.gif?dl=0)
 
 
 ## **CreateArtboardsFromTheSelection**
@@ -133,7 +134,7 @@ The script creates artboards on selected items
 3. Set the desired settings
 4. Press button "OK" or press enter
 
-![CreateArtboardsFromTheSelection](/images/createArtboardsFromTheSelection.gif)
+![CreateArtboardsFromTheSelection](https://dl.dropboxusercontent.com/s/yx0rm5z7767fvt2/createArtboardFromTheSelection.gif?dl=0)
 
 
 ## **ForceCloseOtherDocuments**
@@ -145,7 +146,7 @@ The script closes the documents except the active one, it closes them without sa
 3. Run script File → Scripts → forceCloseOtherDocuments.jsx
 4. Press "OK" or press enter
 
-![ForceCloseOtherDocuments](/images/forceCloseOtherDocuments.gif)
+![ForceCloseOtherDocuments](https://dl.dropboxusercontent.com/s/sg9qq2hlki7pff9/forceCloseOtherDocuments.gif?dl=0)
 
 
 ## **BatchTextEdit**
@@ -174,4 +175,13 @@ The script copies color samples from the document to the active document while m
 2. Select the document from which to copy the swatches
 3. Press "OK" or press enter
 
-![TransferSwatches](/images/transferSwatches.gif)
+![TransferSwatches](https://dl.dropboxusercontent.com/s/51ert15kcp7ufm7/transferSwatches.gif?dl=0)
+
+## &nbsp;
+## **Contact**
+Email: [i@ladygin.pro](mailto:i@ladygin.pro)<br>
+Site: [www.ladygin.pro](http://ladygin.pro)
+
+## **LICENSE**
+All scripts is licensed under the MIT licence.<br>
+See the included LICENSE file for more details.

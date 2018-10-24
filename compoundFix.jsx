@@ -49,17 +49,26 @@ if (app.executeMenuCommand instanceof Function) {
             for (var i = 0; i < l; i++) {
                 if (__items[i].typename === 'GroupItem') {
                     var j = __items[i].pageItems.length;
-                    while (j--) { __items[i].pageItems[0].moveBefore(__items[i]); }
+                    while (j--) {
+                        __items[i].pageItems[0].locked = __items[i].pageItems[0].hidden = false;
+                        __items[i].pageItems[0].moveBefore(__items[i]);
+                    }
                     __items[i].remove();
                 }
             }
         }
 
-        function compoundFix (item) {
+        function compoundFix (item, isHidden, isLocked) {
+            if (isHidden) item.hidden = false;
+            if (isLocked) item.locked = false;
+
             selection = [item];
             app.executeMenuCommand('noCompoundPath');
             __ungroup(selection);
             app.executeMenuCommand('compoundPath');
+
+            if (isHidden) selection[0].hidden = true;
+            if (isLocked) selection[0].locked = true;
             selection = null;
         }
 
@@ -71,7 +80,7 @@ if (app.executeMenuCommand instanceof Function) {
                     compoundPathItemsNormalize(items[i].pageItems);
                 }
                     else if (items[i].typename === 'CompoundPathItem') {
-                        compoundFix(items[i]);
+                        compoundFix(items[i], radioAll.value ? items[i].hidden : false, radioAll.value ? items[i].locked : false);
                     }
                 progressBar.value += progressBarCounter;
                 win.update();

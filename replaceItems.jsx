@@ -38,14 +38,15 @@ var panelCheckboxes = win.add('panel');
     var copyWHCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy Width & Height'),
         saveOriginalCheckbox = panelCheckboxes.add('checkbox', undefined, 'Save original element'),
         copyColorsCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy colors from element'),
-        randomRotateCheckbox = panelCheckboxes.add('checkbox', undefined, 'Random element rotation');
+        randomRotateCheckbox = panelCheckboxes.add('checkbox', undefined, 'Random element rotation'),
+        symbolByRPCheckbox = panelCheckboxes.add('checkbox', [0, 0, 100, 40], 'Align symbols by\nregistration point');
 
     bufferRadio.value = true;
     copyWHCheckbox.value = false;
     saveOriginalCheckbox.value = false;
 
     var winButtons = win.add('group');
-    winButtons.alignChildren = 'center';
+    winButtons.alignChildren = ['fill', 'fill'];
     winButtons.margins = [0, 0, 0, 0];
 
     var cancel = winButtons.add('button', undefined, 'Cancel');
@@ -72,6 +73,26 @@ var panelCheckboxes = win.add('panel');
 
 function randomRotation (item) {
     item.rotate(Math.floor(Math.random() * 360), true, true, true, true, Transformation.CENTER);
+}
+
+function getSymbolPositionByRegistrationPoint (item) {
+    var bakupSymbol = item.symbol,
+        newSymbol = activeDocument.symbols.add(item, SymbolRegistrationPoint.SYMBOLTOPLEFTPOINT);
+
+    // replace symbol
+    item.symbol = newSymbol;
+
+    // set position
+    var position = [
+            item.left,
+            item.top
+        ];
+
+    // restore symbol
+    item.symbol = bakupSymbol;
+    newSymbol.remove();
+    
+    return position;
 }
 
 function startAction() {
@@ -117,15 +138,20 @@ function startAction() {
 
                 node[__fn] = __size;
                 node[__fnReverse] *= precent;
-                node.left = item.left - (node.width - item.width) / 2;
-                node.top = item.top + (node.height - item.height) / 2;
             }
                 else {
                     node.width = item.width;
                     node.height = item.height;
-                    node.left = item.left - (node.width - item.width) / 2;
-                    node.top = item.top + (node.height - item.height) / 2;
                 }
+
+            node.left = item.left - (node.width - item.width) / 2;
+            node.top = item.top + (node.height - item.height) / 2;
+
+            if (symbolByRPCheckbox.value && node.typename === 'SymbolItem') {
+                var __pos = getSymbolPositionByRegistrationPoint(node);
+                node.left += (item.left + item.width / 2) - __pos[0];
+                node.top += (item.top - item.height / 2) - __pos[1];
+            }
 
             if (copyColorsCheckbox.value && item.fillColor) node.fill(item.fillColor);
             if (!saveOriginalCheckbox.value) item.remove();

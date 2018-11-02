@@ -88,13 +88,14 @@ else {
 		guttersGroup.alignChildren = 'fill';
 	var guttersLabel = guttersGroup.add('statictext', undefined, 'Min distance')
 		guttersValue = guttersGroup.add('edittext', undefined, '0');
+		guttersValue.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); });
 
 	var resizeGroup = guttersResizeGroup.add('group');
 		resizeGroup.orientation = 'column';
 		resizeGroup.alignChildren = 'fill';
 	var resizeLabel = resizeGroup.add('statictext', undefined, 'Resize value')
 		resizeValue = resizeGroup.add('edittext', undefined, '70');
-		resizeValue.addEventListener('keydown', function (e) { inputNumberEvents(e, minValue, 10, Infinity); });
+		resizeValue.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 10, Infinity); });
 
 	var rotatePositionGroup = win.add('group');
 		rotatePositionGroup.orientation = 'row';

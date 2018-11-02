@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 
   Author: Alexander Ladygin (i@ladygin.pro)
   Program version: Adobe Illustrator CC+ (presumably in Adobe Illustrator CS6 - did not test)
@@ -1587,16 +1587,13 @@ var win = new Window('dialog', scriptName + copyright),
     }
 
     var winButtons = globalGroup.add('group');
-    winButtons.orientation = 'row';
     winButtons.alignChildren = ['fill', 'fill'];
+
+    winButtons.add('statictext', undefined, 'All settings are saved automatically.');
 
     var cancel = winButtons.add('button', undefined, 'Cancel');
     cancel.helpTip = 'Press Esc to Close';
     cancel.onClick = function () { win.close(); }
-
-    var saveButton = winButtons.add('button', undefined, 'Save setting');
-    saveButton.helpTip = 'Press Esc to Close';
-    saveButton.onClick = function () { saveSettings(); }
 
     var ok = winButtons.add('button', undefined, 'Create calendar');
     ok.helpTip = 'Press Enter to Run';
@@ -1701,11 +1698,14 @@ function startAction() {
                 yearInMonth: __isYearInMonth.value,
             },
         }).create();
-        saveSettings();
         win.close();
     }catch(e){$.errorMessage(e);}
 }
 
 loadSettings();
+win.onClose = function() {
+    saveSettings();
+    return true;
+}
 win.center();
 win.show();

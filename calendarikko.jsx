@@ -54,7 +54,7 @@ function calendarikko(userOptions) {
             fontSize: 0.7,
             standart: 'us',
             /*
-                eu: Europen
+                eu: European
                 us: American
             */
             linkFrames: false,
@@ -1474,7 +1474,7 @@ var win = new Window('dialog', scriptName + copyright),
                     orientation = 'column';
                     alignChildren = 'fill';
                     add('statictext', undefined, 'Standart:');
-                    var __standart = add('dropdownlist', undefined, ['Europen', 'American']);
+                    var __standart = add('dropdownlist', undefined, ['European', 'American']);
                     __standart.selection = 0;
                 }
             }
@@ -1682,7 +1682,7 @@ function startAction() {
             language:       __lang.selection.text.toLowerCase().slice(0,2),
             holidays:       winHolidays.text.replace(/ /g, '').split(','),
             margin:         '0',
-            standart:       __standart.selection.text === 'Europen' ? 'eu' : 'us',
+            standart:       __standart.selection.text === 'European' ? 'eu' : 'us',
             frameWidth:     $size.width,
             frameHeight:    $size.height,
             template:       __template.selection.text.toLowerCase(),

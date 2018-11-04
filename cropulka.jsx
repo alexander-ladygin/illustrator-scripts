@@ -250,6 +250,7 @@ Object.prototype.toRaster = function (userOptions) {
 };
 
 function cropArtboard (artboardIndex, __progressCounter) {
+    try{
     var art, rect, items, topObject,
         isTopObject = (typeof artboardIndex == 'number' ? false : true);
 
@@ -288,6 +289,14 @@ function cropArtboard (artboardIndex, __progressCounter) {
             ($item.visibleBounds[1] <= coords[1] + __offset) &&
             ($item.visibleBounds[2] <= coords[2] + __offset) &&
             ($item.visibleBounds[3] >= coords[3] - __offset)
+        );
+    }
+    function isOutside ($item, coords) {
+        return (
+            ($item.visibleBounds[0] > coords[2] + __offset) ||
+            ($item.visibleBounds[1] < coords[3] - __offset) ||
+            ($item.visibleBounds[2] < coords[0] - __offset) ||
+            ($item.visibleBounds[3] > coords[1] + __offset)
         );
     }
 
@@ -374,20 +383,23 @@ function cropArtboard (artboardIndex, __progressCounter) {
     function cropProcessBefore (__items, ignoreCoordinates, notCount) {
         var i = __items.length;
         while (i--) {
-            if (
-                !(/* ignoreCoordinates && */ checkPosition(__items[i], rect))
-                && (
-                    (__items[i].typename !== 'PlacedItem') &&
-                    (__items[i].typename !== 'RasterItem') &&
-                    (__items[i].typename !== 'MeshItem')
-                )
-            ) {
-                if (__items[i].typename === 'GroupItem') {
-                    cropProcessBefore(__items[i].pageItems, true, true);
-                }
-                    else if (!__items[i].guides && !(__items[i].clipping && !__items.filled && !__items.stroked)) {
-                        cropProcess(__items[i]);
+            if (isOutside(__items[i], rect)) {
+                __items[i].remove();
+            }
+                else if (
+                    !(/* ignoreCoordinates && */ checkPosition(__items[i], rect))
+                    && (
+                        (__items[i].typename !== 'PlacedItem') &&
+                        (__items[i].typename !== 'RasterItem') &&
+                        (__items[i].typename !== 'MeshItem')
+                    )
+                ) {
+                    if (__items[i].typename === 'GroupItem') {
+                        cropProcessBefore(__items[i].pageItems, true, true);
                     }
+                        else if (!__items[i].guides) {
+                            cropProcess(__items[i]);
+                        }
                 }
 
             if (!notCount) {
@@ -452,6 +464,7 @@ function cropArtboard (artboardIndex, __progressCounter) {
     }
 
     rectangle.remove();
+    }catch(err) {alert(err + '\n' + err.line);}
 }
 
 function startAction() {

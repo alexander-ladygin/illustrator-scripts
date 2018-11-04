@@ -1039,6 +1039,9 @@ function calendarikko(userOptions) {
         normalizeRows(frame);
     }
 
+    function createShapes (__pos) {
+    }
+
     function reverseOrder (items, callback) {
         var i = items.length;
         while (i--) items[i].zOrder(ZOrderMethod.SENDTOBACK);

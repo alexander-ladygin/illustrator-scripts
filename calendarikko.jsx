@@ -623,7 +623,7 @@ function calendarikko(userOptions) {
             str = (isFill ? __date.getDate() : ' ') + '\n' + str;
         };
 
-        return (isUS ? ((isFill ? __date.getDate() - 1 : ' ') + '\n') : '') + str;
+        return (isUS ? ((isFill ? (__date.getDate() - 1 === 0 ? new Date(__date.getFullYear(), __date.getMonth(), __date.getDate() - 1).getDate() : __date.getDate() - 1) : ' ') + '\n') : '') + str;
     }
 
     function getDaysAfter(x) {

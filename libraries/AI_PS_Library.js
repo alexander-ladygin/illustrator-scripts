@@ -3483,7 +3483,7 @@ if ($.appName.illustrator) {
                                 }
                                 if (property.swatches instanceof Array) {
                                     for (var i = 0; i < property.swatches.length; i++) {
-                                        var s = doc.swatches.add();
+                                        var s = (property.swatches[i].isGlobal ? doc.spots.add() : doc.swatches.add());
                                         s.name = property.swatches[i].name || 'Untitled';
                                         s.color = property.swatches[i].color || $.color(property.swatches[i].type || 'cmyk', property.swatches[i].values || [0, 0, 0, 0]);
                                         sg.addSwatch(s);
@@ -3498,7 +3498,7 @@ if ($.appName.illustrator) {
                                 }
                                 if (property instanceof Array) {
                                     for (var i = 0; i < property.length; i++) {
-                                        var s = doc.swatches.add();
+                                        var s = (property[i].isGlobal ? doc.spots.add() : doc.swatches.add());
                                         collection = collection.concat(s);
                                         s.name = property[i].name || 'Untitled';
                                         s.color = property[i].color || $.color(property[i].type || 'cmyk', property[i].values || [0, 0, 0, 0]);

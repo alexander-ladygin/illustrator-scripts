@@ -36,7 +36,8 @@ var scriptName = 'Calendarikko',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/'
-    };
+    },
+    $margins = '0';
 
 function calendarikko(userOptions) {
     var $date = new Date(),
@@ -58,6 +59,13 @@ function calendarikko(userOptions) {
                 us: American
             */
             linkFrames: false,
+            shapes: 'use-fill',
+            /*
+                none:          None
+                create-new:    Create new shape
+                use-fill:      if the shape is created, use it and copy width, height, top, left, else create new shape
+                use-existing:  if the shape is created, use it, else create new shape
+            */
             otherDays: 'fill',
             enableFrames: {
                 day: true,
@@ -121,14 +129,15 @@ function calendarikko(userOptions) {
             language: 'ru',
             daysFormat: 'shortForm',
             systemNames: {
-                prefix: 'calendarikko__',
-                layer: 'calendar',
-                frame: 'frame',
-                month: 'month',
-                body: 'body',
-                weekNames: 'weekNames',
+                prefix:      'calendarikko__',
+                layer:       'calendar',
+                frame:       'frame',
+                month:       'month',
+                body:        'body',
+                weekNames:   'weekNames',
                 weekNumbers: 'weekNumbers',
-                weekFrames: 'weekFrame',
+                weekFrames:  'weekFrame',
+                symbol:      'symbol',
             },
             names: {
                 ru: {
@@ -530,7 +539,8 @@ function calendarikko(userOptions) {
     var frameColumns = 7,
         frameRows = 5,
         totalCeils = frameColumns * frameRows;
-        daysFormatCorrectHeight = false;
+        daysFormatCorrectHeight = false,
+        shapesCreated = false;
 
     // styles
     var fontSize = false,
@@ -553,6 +563,9 @@ function calendarikko(userOptions) {
         __DTFLast = [options.names[options.language][options.daysFormat].pop()];
         options.names[options.language][options.daysFormat] = __DTFLast.concat(options.names[options.language][options.daysFormat]);
     }
+
+    // parse shapes
+    options.shapes = (options.shapes.length ? options.shapes.toString().toLowerCase() : 'create-new');
 
     var bodyStyle = bodyEmptyStyle = phStyleMonth = phStyleDayName = phStyleWeekNumbers = charStyleWeekends = doubleDays = false;
 
@@ -765,6 +778,12 @@ function calendarikko(userOptions) {
             weeksTitle, weeksTitleFrame, doubleWeeksTitleFrame,
             weeksNumbersTitle, weeksNumbersTitleFrame, doubleWeeksNumbersTitleFrame,
             props = {
+                frame: {
+                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x),
+                    y: ((anchor_y - options.margin[0] * rectDirection)) + ((options.frameHeight + options.gutter_y) * y),
+                    w: options.frameWidth,
+                    h: options.frameHeight,
+                },
                 monthTitle: {
                     x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x),
                     y: ((anchor_y - options.margin[0] * rectDirection)) + ((options.frameHeight + options.gutter_y) * y),
@@ -821,6 +840,9 @@ function calendarikko(userOptions) {
 
         // set name for month group
             monthGroup.name = options.systemNames.prefix + options.systemNames.frame;
+
+        // create shape
+            createShapes(monthGroup, props);
 
         // month title
         if (options.enableFrames.month) {
@@ -1039,7 +1061,135 @@ function calendarikko(userOptions) {
         normalizeRows(frame);
     }
 
-    function createShapes (__pos) {
+    function createShapes (placement, $props) {
+        if (options.shapes.slice(0,1) === 'n') return;
+
+        var symbolFrame, symbolFrameItem, symbolFrameReplace,
+            sItems = activeDocument.symbolItems,
+            symbolGroup = activeDocument.groupItems.add(),
+            symbolName = options.systemNames.prefix + options.systemNames.symbol,
+            shapesCollection = [], $shapesDay, $shapesWeek;
+
+        if (options.shapes.slice(0,1) === 'u') {
+            try {
+                symbolFrame = activeDocument.symbols.getByName(symbolName);
+                var sItem = pasteSymbol();
+                if (options.shapes.split('-')[1][0] === 'f') {
+                    sItem.width = $props.frame.w;
+                    sItem.height = $props.frame.h;
+                    sItem.position = [$props.frame.x, $props.frame.y];
+                }
+                return sItem;
+            } catch (e) {}
+        }
+
+
+        if (options.enableFrames.month) {
+            shapesCollection.push(symbolGroup.pathItems.rectangle($props.monthTitle.y, $props.monthTitle.x, $props.monthTitle.w, $props.monthTitle.h));
+        }
+
+        if (options.enableFrames.day) {
+            $shapesDay = symbolGroup.groupItems.add();
+            var $shapesDayW = $props.dayTitle.w / frameColumns;
+
+            for (var i = 0; i < frameColumns; i++) {
+                $shapesDay.pathItems.rectangle($props.dayTitle.y, $props.dayTitle.x + ($shapesDayW * i), $shapesDayW, $props.dayTitle.h);
+            }
+
+            shapesCollection.push($shapesDay);
+            if (isPreset('days-title-bottom') && isPreset('days-title-top')) {
+                $shapesDay.duplicate().top -= $props.body.h + $props.dayTitle.h;
+            }
+        }
+
+        if (options.enableFrames.week) {
+            $shapesWeek = symbolGroup.groupItems.add();
+            var $shapesWeekH = $props.weeksTitle.h / frameRows;
+
+            for (var i = 0; i < frameRows; i++) {
+                $shapesWeek.pathItems.rectangle($props.weeksTitle.y - ($shapesWeekH * i), $props.weeksTitle.x, $props.weeksTitle.w, $shapesWeekH);
+            }
+
+            if (options.enableFrames.day) {
+                $shapesDay.pathItems.rectangle($props.weeksNumbersTitle.y, $props.weeksNumbersTitle.x, $props.weeksNumbersTitle.w, $props.weeksNumbersTitle.h);
+                if (isPreset('days-title-bottom') && isPreset('days-title-top')) {
+                    $shapesDay.pathItems.rectangle($props.weeksNumbersTitle.y - $props.body.h - $props.weeksNumbersTitle.h, $props.weeksNumbersTitle.x, $props.weeksNumbersTitle.w, $props.weeksNumbersTitle.h);
+                }
+            }
+
+
+            shapesCollection.push($shapesWeek);
+            if (isPreset('week-numbers-right') && isPreset('week-numbers-left')) {
+                $shapesWeek.duplicate().left += $props.body.w + $props.weeksTitle.w;
+            }
+        }
+
+        var $shapesBody = symbolGroup.groupItems.add(),
+            $shapesBodyW = $props.body.w / frameColumns;
+            $shapesBodyH = $props.body.h / frameRows;
+
+        for (var i = 0; i < frameColumns; i++) {
+            for (var j = 0; j < frameRows; j++) {
+                $shapesBody.pathItems.rectangle($props.body.y - ($shapesBodyH * j), $props.body.x + ($shapesBodyW * i), $shapesBodyW, $shapesBodyH);
+            }
+        }
+        shapesCollection.push($shapesBody);
+
+        function pasteSymbol (__frame) {
+            symbolFrameItem = activeDocument.symbolItems.add(__frame || symbolFrame);
+            symbolFrameItem.position = [$props.frame.x, $props.frame.y];
+            symbolFrameItem.moveToBeginning(placement);
+            return symbolFrameItem;
+        }
+
+        // create or replace symbol
+        try {
+            symbolFrame = activeDocument.symbols.getByName(symbolName);
+
+            if (!shapesCreated) {
+                // create symbol
+                symbolFrameReplace = activeDocument.symbols.add(symbolGroup, SymbolRegistrationPoint.SYMBOLCENTERPOINT);
+
+                // replace symbol items in document
+                var i = sItems.length;
+                if (i) {
+                    while (i--) sItems[i].symbol = symbolFrameReplace;
+                }
+                    else {
+                        pasteSymbol(symbolFrameReplace).symbol = symbolFrameReplace;
+                        shapesCreated = true;
+                    }
+
+                // remove shapes
+                symbolGroup.remove();
+                symbolFrame.remove();
+
+                // set symbol name
+                symbolFrameReplace.name = symbolName;
+            }
+                else {
+                    pasteSymbol();
+                }
+        }
+            catch(e){
+                // create symbol
+                symbolFrame = activeDocument.symbols.add(symbolGroup, SymbolRegistrationPoint.SYMBOLCENTERPOINT);
+
+                // set symbol name
+                symbolFrame.name = symbolName;
+
+                // paste symbol on artboard
+                pasteSymbol();
+
+                // remove shapes
+                symbolGroup.remove();
+
+                shapesCreated = true;
+            }
+
+        // clear shapes
+        var j = shapesCollection.length;
+        while (j--) shapesCollection[j].remove();
     }
 
     function reverseOrder (items, callback) {
@@ -1501,8 +1651,8 @@ var win = new Window('dialog', scriptName + copyright),
                 __frameAutoSize.selection = 0;
                 __frameAutoSize.onChange = function () {
                     var val = this.selection.text === 'Custom';
-                    __frameWidthText.enabled = __frameWidth.enabled = val;
-                    __frameHeightText.enabled = __frameHeight.enabled = val;
+                    __frameWidthText.enabled = __frameWidth.enabled = __frameHeightText.enabled = __frameHeight.enabled = val;
+                    marginsButton.enabled = !val;
                 }
             }
 
@@ -1533,6 +1683,11 @@ var win = new Window('dialog', scriptName + copyright),
                     __gutterY.addEventListener('keydown', function(e) { inputNumberEvents(e, __gutterY, 0, Infinity); });
                     __gutterY.addEventListener('change', function(e) { inputNumberEvents(e, __gutterY, 0, Infinity); });
                 }
+            }
+
+            var marginsButton = add('button', undefined, 'Margins (not for custom frame)');
+            marginsButton.onClick = function () {
+                $margins = prompt('Enter the margin - top right bottom left. Units mm, px. Separator space', $margins).toLowerCase();
             }
         }
         with (add('panel')) {
@@ -1577,6 +1732,15 @@ var win = new Window('dialog', scriptName + copyright),
 
                 var __otherDays = add('checkbox', undefined, 'Enable days of other months');
                 __otherDays.value = true;
+            }
+
+            with (add('group')) {
+                orientation = 'row';
+                alignChildren = 'fill';
+    
+                add('statictext', undefined, 'Shapes for frames:');
+                var shapesVal = add('dropdownlist', [0, 0, 85, 25], 'None,Create New,Use Fill,Use Existing'.split(','));
+                shapesVal.selection = 1;
             }
         }
     }
@@ -1625,8 +1789,12 @@ function saveSettings() {
             __isMonth.value,
             __isYearInMonth.value,
             __otherDays.value,
-            __standart.selection.index
-        ].toString() + '\n' + __weekends.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' + winHolidays.text.replace(/ /g, '').replace(/,/g, ', ');
+            __standart.selection.index,
+            shapesVal.selection.index
+        ].toString() + '\n' +
+        __weekends.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
+        winHolidays.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
+        $margins;
 
     $file.open('w');
     $file.write(data);
@@ -1640,7 +1808,8 @@ function loadSettings() {
             var data = $file.read().split('\n'),
                 $main = data[0].split(','),
                 $wnds = data[1],
-                $holi = data[2];
+                $holi = data[2],
+                $mrgn = data[3];
             __startYear.text = $main[0];
             __startMonth.text = $main[1];
             __endYear.text = $main[2];
@@ -1661,8 +1830,14 @@ function loadSettings() {
             __isYearInMonth.value = $main[17] === 'true' ? true : false;
             __otherDays.value = $main[18] === 'true' ? true : false;
             __standart.selection = parseInt($main[19]);
+            shapesVal.selection = parseInt($main[20]);
             __weekends.text = $wnds;
             winHolidays.text = $holi;
+            $margins = $mrgn;
+
+            var val = __frameAutoSize.selection.text === 'Custom';
+            __frameWidthText.enabled = __frameWidth.enabled = __frameHeightText.enabled = __frameHeight.enabled = val;
+            marginsButton.enabled = !val;
         } catch (e) {}
         $file.close();
     }
@@ -1684,7 +1859,8 @@ function startAction() {
             otherDays:      __otherDays.value ? 'fill': 'empty',
             language:       __lang.selection.text.toLowerCase().slice(0,2),
             holidays:       winHolidays.text.replace(/ /g, '').split(','),
-            margin:         '0',
+            margin:         $margins,
+            shapes:         shapesVal.selection.text.toLowerCase().replace(/ /g, '-'),
             standart:       __standart.selection.text === 'European' ? 'eu' : 'us',
             frameWidth:     $size.width,
             frameHeight:    $size.height,

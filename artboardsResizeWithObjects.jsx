@@ -156,8 +156,7 @@ function resizeArtboardWithObjects (__size, __mode, __artNum) {
             
             while (i--) {
                 items[i].resize(resizeValue * 100, resizeValue * 100, true, true, true, true, resizeValue * 100, Transformation.TOPLEFT);
-                items[i].top *= resizeValue;
-                items[i].left *= resizeValue;
+                items[i].position = [items[i].position[0] * resizeValue, items[i].position[1] * resizeValue];
             }
         }
 

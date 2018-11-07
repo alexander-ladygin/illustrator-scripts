@@ -30,6 +30,7 @@ String.prototype.hexDecode = function () {var s = '';for (var i = 0; i < this.le
 Object.prototype.extend = function (userObject, deep) {try {for (var key in userObject) {if (this.hasOwnProperty(key)) {if (deep&& this[key] instanceof Object&& !(this[key] instanceof Array)&& userObject[key] instanceof Object&& !(userObject[key] instanceof Array)) {this[key].extend(userObject[key], deep);}else this[key] = userObject[key];}}return this;}catch (e) {$.errorMessage('$.objectParser() - error: ' + e);}};
 Object.prototype.getNearby = function (prevOrNext) {var parent = this.parent,items = parent.pageItems,l = items.length;prevOrNext = prevOrNext || 'next';for (var i = 0; i < l; i++) {if (items[i] === this) {return (((prevOrNext === 'next') && (i + 1 < l)) ? items[i + 1] : (((prevOrNext === 'prev') && (i - 1 >= 0)) ? items[i - 1] : undefined));}}}
 function parseMargin (value, ifErrReturnValue) {value = (typeof value === 'string' ? value.split(' ') : (value instanceof Array ? value : ''));if (!value.length) return ifErrReturnValue !== undefined ? ifErrReturnValue : [0, 0, 0, 0];if (value.length === 2) {value[2] = value[0];value[3] = value[1];}else if (value.length < 4) {var val = value[value.length - 1];for (var i = value.length; i < 4; i++) {value[i] = val;}}for (var i = 0; i < value.length; i++) {value[i] = $.convertUnits(value[i], 'px');}return value;}
+function getBounds (items, bounds) {bounds = bounds || 'geometricBounds'; bounds = (bounds && bounds.toLowerCase().indexOf('bounds') === -1) ? bounds += 'Bounds' : bounds;var l = items.length, x = [], y = [], w = [], h = [];for (var i = 0; i < l; i++) {x.push(items[i][bounds][0]);y.push(items[i][bounds][1]);w.push(items[i][bounds][2]);h.push(items[i][bounds][3]);};return [Math.min.apply(null, x), Math.max.apply(null, y), Math.max.apply(null, w), Math.min.apply(null, h)];}
 
 var scriptName = 'Calendarikko',
     copyright = ' \u00A9 www.ladygin.pro',
@@ -542,6 +543,9 @@ function calendarikko(userOptions) {
         daysFormatCorrectHeight = false,
         shapesCreated = false;
 
+    // holidays
+    var holidaysMask = ',' + options.holidays.toString().replace(/ /g, '') + ',';
+
     // styles
     var fontSize = false,
         lastYear = options.endYear,
@@ -569,14 +573,70 @@ function calendarikko(userOptions) {
 
     var bodyStyle = bodyEmptyStyle = phStyleMonth = phStyleDayName = phStyleWeekNumbers = charStyleWeekends = doubleDays = false;
 
-    function createStyles (__replace) {
-        try { bodyStyle = activeDocument.paragraphStyles.getByName(stylesName.body); }catch(e){}
-        try { bodyEmptyStyle = activeDocument.characterStyles.getByName(stylesName.bodyEmpty); }catch(e){}
-        try { phStyleMonth = activeDocument.paragraphStyles.getByName(stylesName.months); }catch(e){}
-        try { phStyleDayName = activeDocument.paragraphStyles.getByName(stylesName.dayName); }catch(e){}
-        try { phStyleWeekNumbers = activeDocument.paragraphStyles.getByName(stylesName.weekNumbers); }catch(e){}
-        try { charStyleWeekends = activeDocument.characterStyles.getByName(stylesName.weekends); }catch(e){}
-        try { doubleDays = activeDocument.characterStyles.getByName(stylesName.doubleDays); }catch(e){}
+
+    // check and change of the variable values
+    var activeArt = activeDocument.artboards[activeDocument.artboards.getActiveArtboardIndex()],
+        $selRect, artWidth, artHeight;
+
+    function setRect() {
+        options.rect = options.rect ? options.rect : activeArt.artboardRect;
+        artWidth = options.rect[2] - options.rect[0];
+        artHeight = options.rect[1] - options.rect[3];
+    
+        if (typeof options.frameWidth === 'string' && options.frameWidth.slice(0,3) === 'sel' && selection.length) {
+            $selRect = getBounds(selection, 'geometricBounds');
+            options.rect[0] = $selRect[0];
+            options.rect[2] = $selRect[2];
+            artWidth = options.rect[2] - options.rect[0];
+        }
+        if (typeof options.frameHeight === 'string' && options.frameHeight.slice(0,3) === 'sel' && selection.length) {
+            $selRect = getBounds(selection, 'geometricBounds');
+            options.rect[1] = $selRect[1];
+            options.rect[3] = $selRect[3];
+            artHeight = options.rect[1] - options.rect[3];
+        }
+    
+        options.margin = parseMargin(options.margin);
+        if (options.frameWidth === 'selectionsize') {
+            options.margin[1] = 0;
+            options.margin[3] = 0;
+        }
+        if (options.frameHeight === 'selectionsize') {
+            options.margin[0] = 0;
+            options.margin[2] = 0;
+        }
+    
+        options.frameWidth = typeof options.frameWidth === 'number'
+            ? options.frameWidth
+            : (typeof options.frameWidth === 'string'
+                ? (((options.frameWidth.slice(0, 2).toLowerCase() === 'fi') || (options.frameWidth === 'selectionfit'))
+                    ? false
+                    : (((options.frameWidth.slice(0, 3).toLowerCase() === 'art') || (options.frameWidth === 'selectionsize'))
+                        ? artWidth - options.margin[1] - options.margin[3]
+                        : 500)
+                )
+                : 500);
+    
+        options.frameHeight = typeof options.frameHeight === 'number'
+            ? options.frameHeight
+            : (typeof options.frameHeight === 'string'
+            ? (((options.frameHeight.slice(0, 2).toLowerCase() === 'fi') || (options.frameHeight === 'selectionfit'))
+                    ? false
+                    : (((options.frameHeight.slice(0, 3).toLowerCase() === 'art') || (options.frameHeight === 'selectionsize'))
+                        ? artHeight - options.margin[0] - options.margin[2]
+                        : 500)
+                )
+                : 400);
+    }
+
+    function createStyles() {
+        try { bodyStyle = activeDocument.paragraphStyles.getByName(stylesName.body); } catch (e) { options.notStyles = !1; }
+        try { bodyEmptyStyle = activeDocument.characterStyles.getByName(stylesName.bodyEmpty); } catch (e) { options.notStyles = !1; }
+        try { phStyleMonth = activeDocument.paragraphStyles.getByName(stylesName.months); } catch (e) { options.notStyles = !1; }
+        try { phStyleDayName = activeDocument.paragraphStyles.getByName(stylesName.dayName); } catch (e) { options.notStyles = !1; }
+        try { phStyleWeekNumbers = activeDocument.paragraphStyles.getByName(stylesName.weekNumbers); } catch (e) { options.notStyles = !1; }
+        try { charStyleWeekends = activeDocument.characterStyles.getByName(stylesName.weekends); } catch (e) { options.notStyles = !1; }
+        try { doubleDays = activeDocument.characterStyles.getByName(stylesName.doubleDays); } catch (e) { options.notStyles = !1; }
     
         bodyStyle = bodyStyle || activeDocument.paragraphStyles.add(stylesName.body);
         bodyEmptyStyle = bodyEmptyStyle || activeDocument.characterStyles.add(stylesName.bodyEmpty);
@@ -595,31 +655,30 @@ function calendarikko(userOptions) {
         };
 
 
-        // body
-        bodyStyle.paragraphAttributes.justification = Justification.CENTER;
-
-        // months
-        phStyleMonth.paragraphAttributes.justification = Justification.CENTER;
-
-        // dayName
-        phStyleDayName.paragraphAttributes.justification = Justification.CENTER;
-
-        // body
-        bodyStyle.characterAttributes.fillColor = options.fontColor.body;
-        bodyEmptyStyle.characterAttributes.fillColor = options.fontColor.bodyEmpty;
-
-        // week numbers
-        phStyleWeekNumbers.paragraphAttributes.justification = Justification.CENTER;
-        phStyleWeekNumbers.characterAttributes.fillColor = options.fontColor.weekNumbers;
-
-        // weekends
-        charStyleWeekends.characterAttributes.fillColor = options.fontColor.weekends;
-
-        // holidays
-        holidaysMask = ',' + options.holidays.toString().replace(/ /g, '') + ',';
-
-        // doubleDays
-        doubleDays.characterAttributes.horizontalScale = doubleDays.characterAttributes.verticalScale = 100;
+        if (!options.notStyles) {
+            // body
+            bodyStyle.paragraphAttributes.justification = Justification.CENTER;
+    
+            // months
+            phStyleMonth.paragraphAttributes.justification = Justification.CENTER;
+    
+            // dayName
+            phStyleDayName.paragraphAttributes.justification = Justification.CENTER;
+    
+            // body
+            bodyStyle.characterAttributes.fillColor = options.fontColor.body;
+            bodyEmptyStyle.characterAttributes.fillColor = options.fontColor.bodyEmpty;
+    
+            // week numbers
+            phStyleWeekNumbers.paragraphAttributes.justification = Justification.CENTER;
+            phStyleWeekNumbers.characterAttributes.fillColor = options.fontColor.weekNumbers;
+    
+            // weekends
+            charStyleWeekends.characterAttributes.fillColor = options.fontColor.weekends;
+    
+            // doubleDays
+            doubleDays.characterAttributes.horizontalScale = doubleDays.characterAttributes.verticalScale = 100;
+        }
     }
 
     function getDaysBefore() {
@@ -748,6 +807,7 @@ function calendarikko(userOptions) {
         var separator = '',
             strArr = __frame.contents.split('\r'),
             words = __frame.words;
+
         if (strArr.length > totalCeils) {
             var l = strArr.length;
             for (var i = j = totalCeils, x = 0; j < l; j++, x++) {
@@ -766,7 +826,7 @@ function calendarikko(userOptions) {
     }
 
     function createMonth ($layer, x, y, anchor_x, anchor_y, $frame) {
-        var monthGroup = $frame ? $frame : $layer.groupItems.add(),
+        var monthGroup = ($frame && $frame.typename ? $frame : $layer.groupItems.add()),
             rectDirection = anchor_y < 0 ? -1 : 1,
             heightDayTitle = !options.enableFrames.day ? 0 : options.frameHeight / frameColumns / 2,
             offsetDayTitle = !options.enableFrames.day ? 0 : 0,
@@ -863,7 +923,6 @@ function calendarikko(userOptions) {
                 else monthTitleFrame.contents = monthTitleFrame.contents.replace(/{year}/g, $date.getFullYear());
         }
 
-
         // days title
         if (options.enableFrames.day) {
             if (!$frame) {
@@ -953,46 +1012,57 @@ function calendarikko(userOptions) {
 
 
         // set styles
-        var autoFontSize = ((options.frameHeight < (options.frameWidth - widthWeeks)) ? options.frameHeight / (frameColumns + options.columns_gutter / 2) : (options.frameWidth - widthWeeks) / (frameRows + options.rows_gutter / 2));
+        if (!options.notStyles) {
+            var autoFontSize = ((props.body.h < props.body.w) ? props.body.h / (frameColumns + options.columns_gutter / 2) : props.body.w / (frameRows + options.rows_gutter / 2));
 
-        // set font size
-        if (fontSize === false) {
-            fontSize = (options.fontSize === 'auto' ? autoFontSize : (options.fontSize < 2.5 ? autoFontSize * options.fontSize : options.fontSize));
+            // set font size
+            if (fontSize === false) {
+                fontSize = (options.fontSize === 'auto' ? autoFontSize : (options.fontSize < 2.5 ? autoFontSize * options.fontSize : options.fontSize));
 
-            // paragraphStyles
-            bodyStyle.paragraphAttributes.spaceBefore = heightArea / frameRows;
-            phStyleDayName.paragraphAttributes.spaceBefore = heightDayTitle;
-            bodyStyle.characterAttributes.size = fontSize;
-            doubleDays.characterAttributes.size = fontSize * 0.6;
-            bodyStyle.characterAttributes.baselineShift = fontSize * -0.35;
-            doubleDays.characterAttributes.baselineShift = fontSize * -(0.5);
+                // paragraphStyles
+                bodyStyle.paragraphAttributes.spaceBefore = heightArea / frameRows;
+                phStyleDayName.paragraphAttributes.spaceBefore = heightDayTitle;
+                bodyStyle.characterAttributes.size = fontSize;
+                bodyStyle.characterAttributes.baselineShift = fontSize * -0.5;
+                doubleDays.characterAttributes.size = fontSize * 0.6;
+                doubleDays.characterAttributes.baselineShift = (fontSize * 1.6) * -(0.5);
+            }
         }
+
+        // body set font size
+        frame.textRange.characterAttributes.baselineShift = bodyStyle.characterAttributes.baselineShift;
+        frame.textRange.characterAttributes.size = bodyStyle.characterAttributes.size;
 
         // months
         if (options.enableFrames.month) {
-            phStyleMonth.characterAttributes.size = heightMonthTitle;
+            if (!options.notStyles) {
+                phStyleMonth.characterAttributes.size = heightMonthTitle * 0.7;
+                phStyleMonth.characterAttributes.baselineShift = heightMonthTitle * -0.175;
+            }
             phStyleMonth.applyTo(monthTitleFrame.textRange);
         }
 
         // days
         if (options.enableFrames.day) {
             var monthsNames = options.names[options.language][options.daysFormat];
-            phStyleDayName.characterAttributes.size = options.daysFormat !== 'fullWord' ? heightDayTitle : (options.frameWidth - widthWeeks) / frameColumns / (monthsNames.toString().replace(/,/g, '').length / monthsNames.length);
+            if (!options.notStyles) phStyleDayName.characterAttributes.size = options.daysFormat !== 'fullWord' ? heightDayTitle * 0.7 : (options.frameWidth - widthWeeks) / frameColumns / (monthsNames.toString().replace(/,/g, '').length / monthsNames.length);
             phStyleDayName.applyTo(dayTitleFrame.textRange);
 
-            if (daysFormatCorrectHeight === false) {
+            if (!options.notStyles && daysFormatCorrectHeight === false) {
                 var dayTitleFrameOutline = dayTitleFrame.duplicate();
                 dayTitleFrameOutline.textRange.contents = 'Oy';
                 dayTitleFrameOutline = dayTitleFrameOutline.createOutline();
                 daysFormatCorrectHeight = dayTitleFrameOutline.height;
                 dayTitleFrameOutline.remove();
-                phStyleDayName.characterAttributes.baselineShift = (heightDayTitle - daysFormatCorrectHeight) / -2;
+                phStyleDayName.characterAttributes.baselineShift = (heightDayTitle * 1.15 - daysFormatCorrectHeight) / -2;
             }
 
             if (options.enableFrames.week) {
                 phStyleDayName.applyTo(weeksNumbersTitleFrame.textRange);
-                weeksNumbersTitleFrame.textRange.characterAttributes.size = phStyleDayName.characterAttributes.size * 0.7;
-                weeksNumbersTitleFrame.textRange.characterAttributes.baselineShift = phStyleDayName.characterAttributes.baselineShift * 1.15;
+                if (!options.notStyles) {
+                    weeksNumbersTitleFrame.textRange.characterAttributes.size = phStyleDayName.characterAttributes.size * 0.7;
+                    weeksNumbersTitleFrame.textRange.characterAttributes.baselineShift = phStyleDayName.characterAttributes.baselineShift * 1.15;
+                }
             }
 
             if (isPreset('days-title-bottom') && isPreset('days-title-top')) {
@@ -1016,9 +1086,11 @@ function calendarikko(userOptions) {
 
         // weeksTitleFrame
         if (options.enableFrames.week) {
-            phStyleWeekNumbers.characterAttributes.size = ((widthWeeks < heightArea / frameRows) ? widthWeeks * 0.6 : fontSize);
-            phStyleWeekNumbers.paragraphAttributes.spaceBefore = heightArea / frameRows;
-            phStyleWeekNumbers.characterAttributes.baselineShift = ((widthWeeks < heightArea / frameRows) ? fontSize * -0.55 : fontSize * -0.35);
+            if (!options.notStyles) {
+                phStyleWeekNumbers.characterAttributes.size = ((widthWeeks < heightArea / frameRows) ? widthWeeks * 0.6 : fontSize);
+                phStyleWeekNumbers.paragraphAttributes.spaceBefore = heightArea / frameRows;
+                phStyleWeekNumbers.characterAttributes.baselineShift = ((widthWeeks < heightArea / frameRows) ? fontSize * -0.55 : fontSize * -0.35);
+            }
             bodyStyle.applyTo(weeksTitleFrame.textRange);
             phStyleWeekNumbers.applyTo(weeksTitleFrame.textRange);
 
@@ -1078,6 +1150,7 @@ function calendarikko(userOptions) {
                     sItem.width = $props.frame.w;
                     sItem.height = $props.frame.h;
                     sItem.position = [$props.frame.x, $props.frame.y];
+                    symbolGroup.remove();
                 }
                 return sItem;
             } catch (e) {}
@@ -1097,8 +1170,15 @@ function calendarikko(userOptions) {
             }
 
             shapesCollection.push($shapesDay);
+            if (options.enableFrames.week) {
+                if (isPreset('week-numbers-right') && isPreset('week-numbers-left')) {
+                    $shapesDay.pathItems.rectangle($props.weeksNumbersTitle.y, $props.weeksNumbersTitle.x + $props.body.w + $props.weeksTitle.w, $props.weeksNumbersTitle.w, $props.weeksNumbersTitle.h);
+                }
+            }
             if (isPreset('days-title-bottom') && isPreset('days-title-top')) {
-                $shapesDay.duplicate().top -= $props.body.h + $props.dayTitle.h;
+                var $dd = $shapesDay.duplicate();
+                $dd.top -= $props.body.h + $props.dayTitle.h;
+                shapesCollection.push($dd);
             }
         }
 
@@ -1120,7 +1200,9 @@ function calendarikko(userOptions) {
 
             shapesCollection.push($shapesWeek);
             if (isPreset('week-numbers-right') && isPreset('week-numbers-left')) {
-                $shapesWeek.duplicate().left += $props.body.w + $props.weeksTitle.w;
+                var $dd = $shapesWeek.duplicate();
+                $dd.left += $props.body.w + $props.weeksTitle.w;
+                shapesCollection.push($dd);
             }
         }
 
@@ -1198,12 +1280,30 @@ function calendarikko(userOptions) {
         return items;
     }
 
-    function setCalendar() {
-        var $layer = activeDocument.layers.add(),
+    function createCalendarriko (__layer, isReplace) {
+        var $layer = (__layer && __layer.typename === 'Layer' ? __layer : activeDocument.layers.add()),
             allMonths = options.endMonth,
-            allYears = options.endYear - options.startYear;
+            allYears = options.endYear - options.startYear,
+            isSavePos = false;
 
-        $layer.name = options.systemNames.prefix + options.systemNames.layer;
+        if (!isReplace) {
+            $layer.name = options.systemNames.prefix + options.systemNames.layer;
+            options.notStyles = !!options.notStyles;
+        }
+            else {
+                options.notStyles = true;
+                options.margin = [0, 0, 0, 0];
+
+                var frames = $layer.pageItems,
+                    fl = frames.length;
+
+                options.rect = getBounds(frames, 'geometricBounds');
+
+                isSavePos = confirm('Save position?');
+                if (!isSavePos) while (fl--) frames[fl].remove();
+            }
+
+        setRect();
         $date.setFullYear(options.startYear);
 
         if (allYears > 0) {
@@ -1212,199 +1312,227 @@ function calendarikko(userOptions) {
 
         createStyles();
 
-        switch (options.template.toLowerCase()) {
-            case '3x4': {
-                var valX = 3, valY = 4;
-                if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+        if (!isSavePos) {
+            switch (options.template.toLowerCase()) {
+                case '3x4': {
+                    var valX = 3, valY = 4;
+                    if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
 
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    if (x === valX) { x = 0; y--; }
-                    createMonth($layer, x, y, rect[0], rect[1]);
-                    x++; m++;
-                }
-                break;
-            };
-            case '4x3': {
-                var valX = 4, valY = 3;
-                if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
-
-                for (var i = options.startMonth - 1, m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    if (x === valX) { x = 0; y--; }
-                    createMonth($layer, x, y, rect[0], rect[1]);
-                }
-                break;
-            };
-            case '6x2-top': {
-                var valX = 6, valY = 6;
-                if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
-
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    if (x === valX) { x = 0; y--; }
-                    createMonth($layer, x, y, rect[0], rect[1]);
-                    x++; m++;
-                }
-                break;
-            };
-            case '6x2-bottom': {
-                var valX = 6, valY = 6;
-                if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
-
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    if (x === valX) { x = 0; y--; }
-                    createMonth($layer, x, y, rect[0], rect[3] + ((options.frameHeight + options.gutter_y / 2) * 2));
-                    x++; m++;
-                }
-                break;
-            };
-            case '6|6': {
-                var valX = 6, valY = 6, anchorX = rect[0];
-                if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
-
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++ , x-- , y-- , m++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    if (x === -valX) {
-                        anchorX = rect[2] - (options.frameWidth + options.gutter_x + options.margin[1]);
-                        y = 0;
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        if (x === valX) { x = 0; y--; }
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
                     }
-                    createMonth($layer, 0, y, anchorX, rect[1]);
-                }
-                break;
-            };
-            case 'left-bottom': {
-                var valX = 7, valY = 6;
-                if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = ((artHeight - options.margin[0] - options.margin[2]) - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+                    break;
+                };
+                case '4x3': {
+                    var valX = 4, valY = 3;
+                    if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
 
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    createMonth($layer, x, y, rect[0], rect[1]);
-                    y === -(valY - 1) ? x++ : y--;
-                    m++;
-                }
-                break;
-            };
-            case 'top-right': {
-                var valX = 7, valY = 6;
-                if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = ((artHeight - options.margin[0] - options.margin[2]) - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+                    for (var i = options.startMonth - 1, m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        if (x === valX) { x = 0; y--; }
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
+                    }
+                    break;
+                };
+                case '6x2-top': {
+                    var valX = 6, valY = 6;
+                    if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
 
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    createMonth($layer, x, y, rect[0], rect[1]);
-                    x === valX - 1 ? y-- : x++;
-                    m++;
-                }
-                break;
-            };
-            case 'full-top': {
-                var valX = 12, valY = 1;
-                if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = options.frameWidth / 1.2;
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        if (x === valX) { x = 0; y--; }
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
+                    }
+                    break;
+                };
+                case '6x2-bottom': {
+                    var valX = 6, valY = 6;
+                    if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
 
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    createMonth($layer, x, y, rect[0], rect[1]);
-                    x++; m++;
-                }
-                break;
-            };
-            case 'full-bottom': {
-                var valX = 12, valY = 1;
-                if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = options.frameWidth / 1.2;
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        if (x === valX) { x = 0; y--; }
+                        createMonth($layer, x, y, options.rect[0], options.rect[3] + ((options.frameHeight + options.gutter_y / 2) * 2));
+                    }
+                    break;
+                };
+                case '6|6': {
+                    var valX = 6, valY = 6, anchorX = options.rect[0];
+                    if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3] - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
 
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    createMonth($layer, x, y, rect[0], rect[3] + options.frameHeight);
-                    x++; m++;
-                }
-                break;
-            };
-            case 'circle': {
-                var valX = 6, valY = 6, anchorX = (rect[2] - rect[0]) / 2, reverseY = false, reverseX = false;
-                if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++ , x-- , y-- , m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        if (x === -valX) {
+                            anchorX = options.rect[2] - (options.frameWidth + options.gutter_x + options.margin[1]);
+                            y = 0;
+                        }
+                        createMonth($layer, 0, y, anchorX, options.rect[1]);
+                    }
+                    break;
+                };
+                case 'left-bottom': {
+                    var valX = 7, valY = 6;
+                    if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = ((artHeight - options.margin[0] - options.margin[2]) - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
 
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++ , m++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    if (y === -valY) {
-                        y++;
-                        reverseY = true;
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
+                        y === -(valY - 1) ? x++ : y--;
                     }
-                    if (x === 3) {
-                        x--;
-                        reverseX = true;
-                    }
-                    else if (x === -4) {
-                        x++;
-                        reverseX = false;
-                    }
-                    createMonth($layer, x, y, anchorX, rect[1]);
-                    !reverseY ? y-- : y++;
-                    !reverseX ? x++ : x--;
-                }
-                break;
-            };
-            case 'circle-compact': {
-                var valX = 6, valY = 6, anchorX = (rect[2] - rect[0]) / 2, reverseY = false, reverseX = false, $val = 0.5;
-                if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
-                if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+                    break;
+                };
+                case 'top-right': {
+                    var valX = 7, valY = 6;
+                    if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = ((artHeight - options.margin[0] - options.margin[2]) - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
 
-                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++ , m++) {
-                    $date.setFullYear(options.startYear);
-                    $date.setDate(1);
-                    $date.setMonth(m);
-                    if (y === -valY) {
-                        y++;
-                        reverseY = true;
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
+                        x === valX - 1 ? y-- : x++;
                     }
-                    if (m === 12 * $val) {
-                        anchorX -= options.frameWidth / 2;
+                    break;
+                };
+                case 'full-top': {
+                    var valX = 12, valY = 1;
+                    if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = options.frameWidth / 1.2;
+
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
                     }
-                    if (x === 3 * $val) {
-                        x -= $val;
-                        reverseX = true;
+                    break;
+                };
+                case 'full-bottom': {
+                    var valX = 12, valY = 1;
+                    if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = options.frameWidth / 1.2;
+
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        createMonth($layer, x, y, options.rect[0], options.rect[3] + options.frameHeight);
                     }
-                    else if (x === -4 * $val) {
-                        x += $val;
-                        reverseX = false;
+                    break;
+                };
+                case 'circle': {
+                    var valX = 6, valY = 6, anchorX = (options.rect[2] - options.rect[0]) / 2, reverseY = false, reverseX = false;
+                    if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++ , m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        if (y === -valY) {
+                            y++;
+                            reverseY = true;
+                        }
+                        if (x === 3) {
+                            x--;
+                            reverseX = true;
+                        }
+                        else if (x === -4) {
+                            x++;
+                            reverseX = false;
+                        }
+                        createMonth($layer, x, y, anchorX, options.rect[1]);
+                        !reverseY ? y-- : y++;
+                        !reverseX ? x++ : x--;
                     }
-                    createMonth($layer, x, y, anchorX, rect[1]);
-                    !reverseY ? y-- : y++;
-                    x = !reverseX ? x + $val : x - $val;
-                }
-                break;
-            };
+                    break;
+                };
+                case 'circle-compact': {
+                    var valX = 6, valY = 6, anchorX = (options.rect[2] - options.rect[0]) / 2, reverseY = false, reverseX = false, $val = 0.5;
+                    if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2] - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++ , m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        if (y === -valY) {
+                            y++;
+                            reverseY = true;
+                        }
+                        if (m === 12 * $val) {
+                            anchorX -= options.frameWidth / 2;
+                        }
+                        if (x === 3 * $val) {
+                            x -= $val;
+                            reverseX = true;
+                        }
+                        else if (x === -4 * $val) {
+                            x += $val;
+                            reverseX = false;
+                        }
+                        createMonth($layer, x, y, anchorX, options.rect[1]);
+                        !reverseY ? y-- : y++;
+                        x = !reverseX ? x + $val : x - $val;
+                    }
+                    break;
+                };
+            }
         }
+            else {
+                var __pos = [], a = 0;
+                while (fl--) {
+                    __pos[a] = frames[fl].position.concat([
+                        frames[fl].width,
+                        frames[fl].height
+                    ]);
+                    frames[fl].remove();
+                    a++;
+                }
+                var $max = __pos.reverse().length,
+                    gXbak = options.gutter_x,
+                    gYbak = options.gutter_y;
+                
+                options.margin = [0, 0, 0, 0];
+                options.gutter_x = options.gutter_y = 0;
+
+                for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                    $date.setFullYear(options.startYear);
+                    $date.setDate(1);
+                    $date.setMonth(m);
+                    if (x >= $max) {
+                        y--;
+                        options.gutter_x = gXbak;
+                        options.gutter_y = gYbak;
+                    }
+                        else {
+                            options.frameWidth = __pos[x][2];
+                            options.frameHeight = __pos[x][3];
+                        }
+                    createMonth($layer, 0, y, (x < $max ? __pos[x][0] : __pos[$max - 1][0]), (x < $max ? __pos[x][1] : __pos[$max - 1][1]));
+                }
+            }
 
         if (options.linkFrames) {
             var selectionBak = selection,
@@ -1423,71 +1551,22 @@ function calendarikko(userOptions) {
         reverseOrder($layer.pageItems);
     }
 
-
-    // check and change of the variable values
-    var activeArt = activeDocument.artboards[activeDocument.artboards.getActiveArtboardIndex()],
-        rect = activeArt.artboardRect,
-        artWidth = rect[2] - rect[0],
-        artHeight = rect[1] - rect[3];
-
-    options.margin = parseMargin(options.margin);
-
-    options.frameWidth = typeof options.frameWidth === 'number'
-        ? options.frameWidth
-        : (typeof options.frameWidth === 'string'
-            ? (options.frameWidth.slice(0, 2).toLowerCase() === 'fi'
-                ? false
-                : (options.frameWidth.slice(0, 3).toLowerCase() === 'art'
-                    ? artWidth - options.margin[1] - options.margin[3]
-                    : 500)
-            )
-            : 500);
-
-    options.frameHeight = typeof options.frameHeight === 'number'
-        ? options.frameHeight
-        : (typeof options.frameHeight === 'string'
-            ? (options.frameHeight.slice(0, 2).toLowerCase() === 'fi'
-                ? false
-                : (options.frameHeight.slice(0, 3).toLowerCase() === 'art'
-                    ? artHeight - options.margin[0] - options.margin[2]
-                    : 500)
-            )
-            : 400);
-
     // run
     this.create = function () {
-        setCalendar();
+        createCalendarriko();
         return this;
     }
-    this.replace = function (layer, newYear) {
-        if (layer.name === options.systemNames.prefix + options.systemNames.layer) {
-            var frames = layer.pageItems,
-                l = frames.length;
-                allMonths = options.endMonth,
-                allYears = options.endYear - options.startYear;
-    
-            if (allYears > 0) {
-                allMonths = options.startMonth + (12 * allYears - options.startMonth) + options.endMonth;
-            }
-    
-            createStyles(true);
+    this.replace = function (layer) {
+        try {
+            layer = (layer && !(layer instanceof Function)) || activeDocument.layers.getByName(options.systemNames.prefix + options.systemNames.layer);
+        } catch(e) {}
 
-            if (l) {
-                options.frameWidth = frames[0].width;
-                options.frameHeight = frames[0].height;
-            }
-    
-            for (var i = 0, m = options.startMonth - 1; i < l; i++) {
-                $date.setFullYear(options.startYear);
-                $date.setMonth(m);
-                $date.setDate(1);
-                createMonth(layer, 1, 1, 0, 0, frames[i]);
-                m++;
-            }
+        if (layer && layer.name === options.systemNames.prefix + options.systemNames.layer && layer.pageItems.length) {
+            createCalendarriko(layer, true);
         }
             else {
                 if (confirm('Sorry, calendar not found! Create new?')) {
-                    setCalendar();
+                    createCalendarriko();
                 }
             }
 
@@ -1647,7 +1726,7 @@ var win = new Window('dialog', scriptName + copyright),
                 alignChildren = ['fill', 'fill'];
 
                 add('statictext', undefined, 'Frame size:');
-                var __frameAutoSize = add('dropdownlist', undefined, ['Fit artboad', 'Artboard size', 'Custom']);
+                var __frameAutoSize = add('dropdownlist', undefined, ['Fit artboad', 'Artboard size', 'Selection fit', 'Selection size', 'Custom']);
                 __frameAutoSize.selection = 0;
                 __frameAutoSize.onChange = function () {
                     var val = this.selection.text === 'Custom';
@@ -1762,7 +1841,11 @@ var win = new Window('dialog', scriptName + copyright),
     cancel.helpTip = 'Press Esc to Close';
     cancel.onClick = function () { win.close(); }
 
-    var ok = winButtons.add('button', undefined, 'Create calendar');
+    var replaceButton = winButtons.add('button', undefined, 'Replace');
+    replaceButton.helpTip = 'Replaces everything except width, height, position, shapes and styles';
+    replaceButton.onClick = replaceAction;
+
+    var ok = winButtons.add('button', undefined, 'Create calendar', { justify: 'right' });
     ok.helpTip = 'Press Enter to Run';
     ok.onClick = startAction;
     ok.active = true;
@@ -1800,6 +1883,7 @@ function saveSettings() {
     $file.write(data);
     $file.close();
 }
+
 function loadSettings() {
     var $file = File(settingFile.folder + settingFile.name);
     if ($file.exists) {
@@ -1843,48 +1927,68 @@ function loadSettings() {
     }
 }
 
+function getCalendarData() {
+    var $size = {
+            width: (__frameAutoSize.selection.text === 'Custom' ? __frameWidth.text.replace(/ /g, '') : __frameAutoSize.selection.text.replace(/ /g, '').toLowerCase()),
+            height: (__frameAutoSize.selection.text === 'Custom' ? __frameHeight.text.replace(/ /g, '') : __frameAutoSize.selection.text.replace(/ /g, '').toLowerCase()),
+        },
+        $preset = (__daysPosition.selection.index === 2 ? 'days-title-top, days-title-bottom' : ('days-title-' + __daysPosition.selection.text.toLowerCase()));
+        $preset += (__weekNumbersPosition.selection.index === 2 ? 'week-numbers-left, week-numbers-right' : ('week-numbers-' + __weekNumbersPosition.selection.text.toLowerCase()));
+
+    return {
+        startYear:      parseInt(__startYear.text),
+        endYear:        parseInt(__endYear.text),
+        startMonth:     parseInt(__startMonth.text),
+        endMonth:       parseInt(__endMonth.text),
+        otherDays:      __otherDays.value ? 'fill': 'empty',
+        language:       __lang.selection.text.toLowerCase().slice(0,2),
+        holidays:       winHolidays.text.replace(/ /g, '').split(','),
+        margin:         $margins,
+        shapes:         shapesVal.selection.text.toLowerCase().replace(/ /g, '-'),
+        standart:       __standart.selection.text === 'European' ? 'eu' : 'us',
+        frameWidth:     $size.width,
+        frameHeight:    $size.height,
+        template:       __template.selection.text.toLowerCase(),
+        daysFormat:     __daysFormat.selection.text.slice(0,1).toLowerCase() + __daysFormat.selection.text.replace(/ /g, '').slice(1),
+        gutter_x:       __gutterX.text,
+        gutter_y:       __gutterY.text,
+        preset:         $preset,
+        weekends:       __weekends.text.replace(/ /g, '').split(','),
+        enableFrames: {
+            day: __isDay.value,
+            week: __isWeek.value,
+            month: __isMonth.value,
+            yearInMonth: __isYearInMonth.value,
+        },
+    };
+}
+
 function startAction() {
-    try{
-        var $size = {
-                width: (__frameAutoSize.selection.text === 'Custom' ? __frameWidth.text.replace(/ /g, '') : __frameAutoSize.selection.text.replace(/ /g, '').toLowerCase()),
-                height: (__frameAutoSize.selection.text === 'Custom' ? __frameHeight.text.replace(/ /g, '') : __frameAutoSize.selection.text.replace(/ /g, '').toLowerCase()),
-            },
-            $preset = (__daysPosition.selection.index === 2 ? 'days-title-top, days-title-bottom' : ('days-title-' + __daysPosition.selection.text.toLowerCase()));
-            $preset += (__weekNumbersPosition.selection.index === 2 ? 'week-numbers-left, week-numbers-right' : ('week-numbers-' + __weekNumbersPosition.selection.text.toLowerCase()));
-        new calendarikko({
-            startYear:      parseInt(__startYear.text),
-            endYear:        parseInt(__endYear.text),
-            startMonth:     parseInt(__startMonth.text),
-            endMonth:       parseInt(__endMonth.text),
-            otherDays:      __otherDays.value ? 'fill': 'empty',
-            language:       __lang.selection.text.toLowerCase().slice(0,2),
-            holidays:       winHolidays.text.replace(/ /g, '').split(','),
-            margin:         $margins,
-            shapes:         shapesVal.selection.text.toLowerCase().replace(/ /g, '-'),
-            standart:       __standart.selection.text === 'European' ? 'eu' : 'us',
-            frameWidth:     $size.width,
-            frameHeight:    $size.height,
-            template:       __template.selection.text.toLowerCase(),
-            daysFormat:     __daysFormat.selection.text.slice(0,1).toLowerCase() + __daysFormat.selection.text.replace(/ /g, '').slice(1),
-            gutter_x:       __gutterX.text,
-            gutter_y:       __gutterY.text,
-            preset:         $preset,
-            weekends:       __weekends.text.replace(/ /g, '').split(','),
-            enableFrames: {
-                day: __isDay.value,
-                week: __isWeek.value,
-                month: __isMonth.value,
-                yearInMonth: __isYearInMonth.value,
-            },
-        }).create();
+    try {
+        new calendarikko(getCalendarData()).create();
         win.close();
-    }catch(e){$.errorMessage(e);}
+    }
+        catch (e) {
+            $.errorMessage(e);
+        }
+}
+
+function replaceAction() {
+    try {
+        new calendarikko(getCalendarData()).replace();
+        win.close();
+    }
+        catch (e) {
+            $.errorMessage(e);
+        }
 }
 
 loadSettings();
+
 win.onClose = function() {
     saveSettings();
     return true;
 }
+
 win.center();
 win.show();

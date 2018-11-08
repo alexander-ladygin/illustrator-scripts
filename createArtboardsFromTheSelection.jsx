@@ -19,8 +19,12 @@ var panel = win.add('panel', undefined, 'Selection bounds:');
     panel.margins = 20;
 
 var eachSel = panel.add('radiobutton', undefined, 'Each in the selection'),
-    selBnds = panel.add('radiobutton', undefined, 'Only selection bounds');
+    selBnds = panel.add('radiobutton', undefined, 'Only selection bounds'),
+    __itemName = panel.add('checkbox', undefined, 'Set name from element');
+    __itemName.value = true;
     eachSel.value = true;
+    eachSel.onClick = function() { __itemName.enabled = true; }
+    selBnds.onClick = function() { __itemName.value = __itemName.enabled = false; }
 
 var panel = win.add('panel', undefined, 'Item bounds:');
     panel.orientation = 'row';
@@ -51,7 +55,10 @@ function startAction() {
         bounds = (bndsVis.value ? 'visible' : 'geometric') + 'Bounds';
 
     if (eachSel.value) {
-        while (i--) activeDocument.artboards.add(items[i][bounds]);
+        while (i--) {
+            if (__itemName.value && items[i].name) activeDocument.artboards.add(items[i][bounds]).name = items[i].name;
+                else activeDocument.artboards.add(items[i][bounds]);
+        }
     }
         else {
             var x = [], y = [],

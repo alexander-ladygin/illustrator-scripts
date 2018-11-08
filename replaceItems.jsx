@@ -8,7 +8,14 @@
   www.ladygin.pro
 
 */
-var win = new Window('dialog', 'Replace items \u00A9 www.ladygin.pro', undefined);
+
+var scriptName = 'ReplaceItems',
+    settingFile = {
+        name: scriptName + '__setting.json',
+        folder: Folder.myDocuments + '/'
+    };
+
+var win = new Window('dialog', scriptName + ' \u00A9 www.ladygin.pro');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 
@@ -68,9 +75,6 @@ var panelCheckboxes = win.add('panel');
         groupValue.enabled = !copyWHCheckbox.value;
     }
 
-    win.center();
-    win.show();
-
 function randomRotation (item) {
     item.rotate(Math.floor(Math.random() * 360), true, true, true, true, Transformation.CENTER);
 }
@@ -119,7 +123,7 @@ function startAction() {
         }
 
         while (i--) {
-            if (currentRadio.value && !i) break;
+            if (!bufferRadio.value && !i) break;
             var item = items[i],
                 node = getNode().duplicate(item, ElementPlacement.PLACEBEFORE),
                 __fn = 'height',
@@ -166,3 +170,56 @@ function startAction() {
 
     win.close();
 }
+
+function saveSettings() {
+    var $file = new File(settingFile.folder + settingFile.name),
+        data = [
+            bufferRadio.value,
+            currentRadio.value,
+            randomRadio.value,
+            elementsInGroupCheckbox.value,
+            copyWHCheckbox.value,
+            saveOriginalCheckbox.value,
+            copyColorsCheckbox.value,
+            randomRotateCheckbox.value,
+            symbolByRPCheckbox.value,
+            randomValue.text
+        ].toString();
+
+    $file.open('w');
+    $file.write(data);
+    $file.close();
+}
+
+function loadSettings() {
+    var $file = File(settingFile.folder + settingFile.name);
+    if ($file.exists) {
+        try {
+            $file.open('r');
+            var data = $file.read().split('\n'),
+                $main = data[0].split(',');
+                bufferRadio.value = ($main[0] === 'true');
+                currentRadio.value = ($main[1] === 'true');
+                randomRadio.value = ($main[2] === 'true');
+                elementsInGroupCheckbox.value = ($main[3] === 'true');
+                copyWHCheckbox.value = ($main[4] === 'true');
+                saveOriginalCheckbox.value = ($main[5] === 'true');
+                copyColorsCheckbox.value = ($main[6] === 'true');
+                randomRotateCheckbox.value = ($main[7] === 'true');
+                symbolByRPCheckbox.value = ($main[8] === 'true');
+                randomValue.text = $main[9];
+
+                groupValue.enabled = !copyWHCheckbox.value;
+        } catch (e) {}
+        $file.close();
+    }
+}
+
+win.onClose = function() {
+    saveSettings();
+    return true;
+}
+
+loadSettings();
+win.center();
+win.show();

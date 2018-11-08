@@ -14,6 +14,12 @@ if (app.documents.length && app.selection.length < 2) {
 	alert('Please select 2 or more objects');
 }
 else {
+	var scriptName = 'Fillinger',
+		settingFile = {
+			name: scriptName + '__setting.json',
+			folder: Folder.myDocuments + '/'
+		};
+
 	function inputNumberEvents (ev, _input, min, max, callback){
 		var step,
 			_dir = ev.keyName.toLowerCase().slice(0,1),
@@ -41,7 +47,11 @@ else {
 	win.orientation = 'column';
 	win.alignChildren = ['fill', 'fill'];
 
-	var sizePanel = win.add('panel', undefined, 'Items size in % of total size'),
+	var globalGroup = win.add('group');
+		globalGroup.orientation = 'column';
+		globalGroup.alignChildren = ['fill', 'fill'];
+
+	var sizePanel = globalGroup.add('panel', undefined, 'Items size in % of total size'),
 		sizeGroup = sizePanel.add('group');
 	sizePanel.alignChildren = 'fill';
 	sizeGroup.orientation = 'row';
@@ -97,7 +107,7 @@ else {
 		resizeValue = resizeGroup.add('edittext', undefined, '70');
 		resizeValue.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 10, Infinity); });
 
-	var rotatePositionGroup = win.add('group');
+	var rotatePositionGroup = globalGroup.add('group');
 		rotatePositionGroup.orientation = 'row';
 		rotatePositionGroup.alignChildren = ['fill', 'fill'];
 
@@ -121,10 +131,10 @@ else {
 		objectPosBottom = objectPositionGroup.add('radiobutton', undefined, 'Below'),
 		objectPosLayers = objectPositionGroup.add('checkbox', undefined, 'As in [Layers]');
 		objectPosTop.value = true;
-	var randomItems = win.add('checkbox', undefined, 'Random items (if items in the group)'),
-		removeTopElement = win.add('checkbox', undefined, 'Remove the item to fill after executing');
+	var randomItems = globalGroup.add('checkbox', undefined, 'Random items (if items in the group)'),
+		removeTopElement = globalGroup.add('checkbox', undefined, 'Remove the item to fill after executing');
 	
-	var winButtons = win.add('group');
+	var winButtons = globalGroup.add('group');
 		winButtons.orientation = 'row';
 		winButtons.alignChildren = ['fill', 'fill'];
 		winButtons.margins = 0;
@@ -141,6 +151,13 @@ else {
 		};
 		ok.active = true;
 
+	var progressBar = win.add('progressbar'),
+		progressBarCounter = 100;
+		progressBar.value = 0;
+		progressBar.minvalue = 0;
+		progressBar.maxvalue = progressBarCounter;
+		progressBar.maximumSize = [1000, 5];
+
 /*
 
 	random rotate
@@ -149,6 +166,8 @@ else {
 */
 
 	function startAction(){
+		globalGroup.enabled = false;
+
 		var __rotateValue = Number(rotateValue.text);
 		maxCircleSize = Number(maxValue.text);
 		if (maxCircleSize < 0.01 || maxCircleSize > 100){maxCircleSize = 20;}
@@ -171,7 +190,7 @@ else {
 			return alert('The filling object must be PathItem or CompoundPathItem! [' + object.typename + ']');
 		}
 		items.splice(0,1);
-		var placeObject = (items.length === 1 ? (items[0].typename === 'GroupItem' ? items[0].pageItems : items[0]) : (!items.length ? [] : items));
+		var placeObject = (items.length === 1 ? (items[0].typename === 'GroupItem' ? items[0].pageItems : [items[0]]) : (!items.length ? [] : items));
 		if (!placeObject.length) {
 			return alert('No items to fill!');
 		}
@@ -251,6 +270,7 @@ else {
 				size *= .667;
 				if (size < minCircleSize){break;}
 			}
+			progressBarCounter = progressBar.maxvalue * 0.25 / radiiList.length;
 			for (rad=0; rad<radiiList.length; rad++){
 				for (p=0; p<1000; p++){
 					a_rnd = Math.random() * triArea;
@@ -278,7 +298,10 @@ else {
 						}
 					} 
 				}
+				progressBar.value += progressBarCounter;
+				win.update();
 			}
+			progressBarCounter = progressBar.maxvalue * 0.75 / pointList.length;
 			for (p=0; p<pointList.length; p++){
 				pt = pointList[p];
 				nrad = distanceToClosestEdge (pt, edgeList);
@@ -309,6 +332,9 @@ else {
 				__placeObject.position = [pt[0]-nrad + ((__radius - __placeObject.width) / 2), pt[1]+nrad - ((__radius - __placeObject.height) / 2)];
 				if (randomRotate.value) __placeObject.rotate(Math.floor(Math.random() * 360));
 					else if (rotateByValue.value && __rotateValue) __placeObject.rotate(__rotateValue);
+
+				progressBar.value += progressBarCounter;
+				win.update();
 			}
 		}
 
@@ -332,6 +358,60 @@ else {
 	function ClosestPointOnLine(pt, line){var X1 = line[0][0], Y1 = line[0][1],X2 = line[1][0], Y2 = line[1][1],px = pt[0], py = pt[1],dx = X2 - X1,dy = Y2 - Y1,nx,ny;if (dx == 0 && dy == 0){nx = X1;ny = Y1;}else{var t = ((px - X1) * dx + (py - Y1) * dy) / (dx * dx + dy * dy);if (t <= 0){nx = X1;ny = Y1;}else if (t >= 1){nx = X2;ny = Y2;} else{nx = X1 + t * dx;ny = Y1 + t * dy;}}dx = px - nx;dy = py - ny;return [ [nx, ny], Math.sqrt (dx * dx + dy * dy) ]}
 	function point(arr){this.x = arr[0];this.y = arr[1];this.distance = function (pt) { return Math.sqrt ( (this.x-pt.x)*(this.x-pt.x) + (this.y-pt.y)*(this.y-pt.y) ) }}
 
+	function saveSettings() {
+		var $file = new File(settingFile.folder + settingFile.name),
+			data = [
+				maxValue.text,
+				minValue.text,
+				guttersValue.text,
+				resizeValue.text,
+				rotateValue.text,
+				randomRotate.value,
+				rotateByValue.value,
+				objectPosTop.value,
+				objectPosBottom.value,
+				objectPosLayers.value,
+				randomItems.value,
+				removeTopElement.value
+			].toString();
+	
+		$file.open('w');
+		$file.write(data);
+		$file.close();
+	}
+	
+	function loadSettings() {
+		var $file = File(settingFile.folder + settingFile.name);
+		if ($file.exists) {
+			try {
+				$file.open('r');
+				var data = $file.read().split('\n'),
+					$main = data[0].split(',');
+				maxValue.text = $main[0];
+				minValue.text = $main[1];
+				guttersValue.text = $main[2];
+				resizeValue.text = $main[3];
+				rotateValue.text = $main[4];
+				randomRotate.value = ($main[5] === 'true');
+				rotateByValue.value = ($main[6] === 'true');
+				objectPosTop.value = ($main[7] === 'true');
+				objectPosBottom.value = ($main[8] === 'true');
+				objectPosLayers.value = ($main[9] === 'true');
+				randomItems.value = ($main[10] === 'true');
+				removeTopElement.value = ($main[11] === 'true');
+	
+				rotateValue.enabled = !randomRotate.value;
+			} catch (e) {}
+			$file.close();
+		}
+	}
+
+	win.onClose = function() {
+		saveSettings();
+		return true;
+	}
+
+	loadSettings();
 	win.center();
 	win.show();
 }

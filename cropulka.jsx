@@ -10,6 +10,12 @@
 */
 app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
+var scriptName = 'Cropulka',
+    settingFile = {
+        name: scriptName + '__setting.json',
+        folder: Folder.myDocuments + '/'
+    };
+
 var lockedItems = [],
     hiddenItems = [],
     __offset = 0.2,
@@ -513,5 +519,62 @@ function startAction() {
 
 selection = null;
 app.redraw();
+
+function saveSettings() {
+    var $file = new File(settingFile.folder + settingFile.name),
+        data = [
+            activeArtboardRadio.value,
+            allArtboardsRadio.value,
+            customArtboardsRadio.value,
+            customArts.text,
+            extraPanel.value,
+            isRPM.value,
+            cropRPM.value,
+            maskRPM.value,
+            resolutionList.selection.index,
+            resolutionValue.text,
+            includeHLI.value
+        ].toString().replace(/,/g, '@');
+
+    $file.open('w');
+    $file.write(data);
+    $file.close();
+}
+
+function loadSettings() {
+    var $file = File(settingFile.folder + settingFile.name);
+    if ($file.exists) {
+        try {
+            $file.open('r');
+            var data = $file.read().split('\n'),
+                $main = data[0].split('@');
+                activeArtboardRadio.value = ($main[0] === 'true');
+                allArtboardsRadio.value = ($main[1] === 'true');
+                customArtboardsRadio.value = ($main[2] === 'true');
+                customArts.text = $main[3];
+                extraPanel.value = ($main[4] === 'true');
+                isRPM.value = ($main[5] === 'true');
+                cropRPM.value = ($main[6] === 'true');
+                maskRPM.value = ($main[7] === 'true');
+                resolutionList.selection = parseInt($main[8]);
+                resolutionValue.text = $main[9];
+                includeHLI.value = ($main[10] === 'true');
+                
+                RPMGroup.enabled = isRPM.value;
+                resGroup.enabled = (maskRPM.value ? false : isRPM.value);
+                customArts.enabled = customArtboardsRadio.value;
+                resolutionValue.enabled = (resolutionList.selection.index === resolutionList.items.length - 1);
+                resolutionValue.text = (resolutionList.selection.index === resolutionList.items.length - 2 ? docResolution : (resolutionList.selection.index === resolutionList.items.length - 1 ? resolutionValue.text : resolutionList.selection.text.replace(/[^0-9]/gim,'')));
+        } catch (e) {}
+        $file.close();
+    }
+}
+
+win.onClose = function() {
+    saveSettings();
+    return true;
+}
+
+loadSettings();
 win.center();
 win.show();

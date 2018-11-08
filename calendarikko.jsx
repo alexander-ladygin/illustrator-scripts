@@ -53,8 +53,9 @@ function calendarikko(userOptions) {
             rows_gutter: 0,
             gutter_x: 20,
             gutter_y: 20,
-            fontSize: 0.7,
+            fontSize: 'auto',
             standart: 'us',
+            notStyles: false,
             /*
                 eu: European
                 us: American
@@ -918,7 +919,7 @@ function calendarikko(userOptions) {
             // set content & font size
             monthTitleFrame.contents = options.names[options.language].months[$date.getMonth()];
             if (options.enableFrames.yearInMonth) {
-                monthTitleFrame.contents += ' / ' + $date.getFullYear();
+                monthTitleFrame.contents = ($date.getMonth() + 1) + ' ' + monthTitleFrame.contents + ' ' + $date.getFullYear();
             }
                 else monthTitleFrame.contents = monthTitleFrame.contents.replace(/{year}/g, $date.getFullYear());
         }
@@ -1013,7 +1014,7 @@ function calendarikko(userOptions) {
 
         // set styles
         if (!options.notStyles) {
-            var autoFontSize = ((props.body.h < props.body.w) ? props.body.h / (frameColumns + options.columns_gutter / 2) : props.body.w / (frameRows + options.rows_gutter / 2));
+            var autoFontSize = ((props.body.w > props.body.h) ? props.body.h / (frameColumns - 2 + options.columns_gutter / 2) : props.body.w / (frameRows + options.rows_gutter / 2)) / 2;
 
             // set font size
             if (fontSize === false) {
@@ -1023,9 +1024,9 @@ function calendarikko(userOptions) {
                 bodyStyle.paragraphAttributes.spaceBefore = heightArea / frameRows;
                 phStyleDayName.paragraphAttributes.spaceBefore = heightDayTitle;
                 bodyStyle.characterAttributes.size = fontSize;
-                bodyStyle.characterAttributes.baselineShift = fontSize * -0.5;
-                doubleDays.characterAttributes.size = fontSize * 0.6;
-                doubleDays.characterAttributes.baselineShift = (fontSize * 1.6) * -(0.5);
+                bodyStyle.characterAttributes.baselineShift = ((props.body.h / (frameColumns + options.columns_gutter / 2) - fontSize)) * -1.5;
+                doubleDays.characterAttributes.size = fontSize * 0.5;
+                doubleDays.characterAttributes.baselineShift = ((props.body.h / (frameColumns + options.columns_gutter / 2) - doubleDays.characterAttributes.size)) * -1;
             }
         }
 
@@ -1045,7 +1046,7 @@ function calendarikko(userOptions) {
         // days
         if (options.enableFrames.day) {
             var monthsNames = options.names[options.language][options.daysFormat];
-            if (!options.notStyles) phStyleDayName.characterAttributes.size = options.daysFormat !== 'fullWord' ? heightDayTitle * 0.7 : (options.frameWidth - widthWeeks) / frameColumns / (monthsNames.toString().replace(/,/g, '').length / monthsNames.length);
+            if (!options.notStyles) phStyleDayName.characterAttributes.size = options.daysFormat !== 'fullWord' ? heightDayTitle * 0.5 : (options.frameWidth - widthWeeks) / frameColumns / (monthsNames.toString().replace(/,/g, '').length / monthsNames.length);
             phStyleDayName.applyTo(dayTitleFrame.textRange);
 
             if (!options.notStyles && daysFormatCorrectHeight === false) {
@@ -1059,10 +1060,10 @@ function calendarikko(userOptions) {
 
             if (options.enableFrames.week) {
                 phStyleDayName.applyTo(weeksNumbersTitleFrame.textRange);
-                if (!options.notStyles) {
+                // if (!options.notStyles) {
                     weeksNumbersTitleFrame.textRange.characterAttributes.size = phStyleDayName.characterAttributes.size * 0.7;
                     weeksNumbersTitleFrame.textRange.characterAttributes.baselineShift = phStyleDayName.characterAttributes.baselineShift * 1.15;
-                }
+                // }
             }
 
             if (isPreset('days-title-bottom') && isPreset('days-title-top')) {
@@ -1089,7 +1090,7 @@ function calendarikko(userOptions) {
             if (!options.notStyles) {
                 phStyleWeekNumbers.characterAttributes.size = ((widthWeeks < heightArea / frameRows) ? widthWeeks * 0.6 : fontSize);
                 phStyleWeekNumbers.paragraphAttributes.spaceBefore = heightArea / frameRows;
-                phStyleWeekNumbers.characterAttributes.baselineShift = ((widthWeeks < heightArea / frameRows) ? fontSize * -0.55 : fontSize * -0.35);
+                phStyleWeekNumbers.characterAttributes.baselineShift = ((widthWeeks < heightArea / frameRows) ? ((heightArea / (frameRows + options.rows_gutter / 2) - phStyleWeekNumbers.characterAttributes.size) * -0.6) : bodyStyle.characterAttributes.baselineShift);
             }
             bodyStyle.applyTo(weeksTitleFrame.textRange);
             phStyleWeekNumbers.applyTo(weeksTitleFrame.textRange);
@@ -1380,7 +1381,7 @@ function calendarikko(userOptions) {
                         $date.setDate(1);
                         $date.setMonth(m);
                         if (x === -valX) {
-                            anchorX = options.rect[2] - (options.frameWidth + options.gutter_x + options.margin[1]);
+                            anchorX = options.rect[2] - (options.frameWidth + options.margin[1]);
                             y = 0;
                         }
                         createMonth($layer, 0, y, anchorX, options.rect[1]);
@@ -1764,6 +1765,9 @@ var win = new Window('dialog', scriptName + copyright),
                 }
             }
 
+            var __linksFrames = add('checkbox', undefined, 'Create threaded text for frames?');
+            __linksFrames.value = false;
+
             var marginsButton = add('button', undefined, 'Margins (not for custom frame)');
             marginsButton.onClick = function () {
                 $margins = prompt('Enter the margin - top right bottom left. Units mm, px. Separator space', $margins).toLowerCase();
@@ -1821,6 +1825,14 @@ var win = new Window('dialog', scriptName + copyright),
                 var shapesVal = add('dropdownlist', [0, 0, 85, 25], 'None,Create New,Use Fill,Use Existing'.split(','));
                 shapesVal.selection = 1;
             }
+
+            with (add('group')) {
+                orientation = 'row';
+                alignChildren = 'fill';
+    
+                var __createStyle = add('checkbox', undefined, 'Create styles or replace existing?');
+                __createStyle.value = true;
+            }
         }
     }
 
@@ -1873,7 +1885,9 @@ function saveSettings() {
             __isYearInMonth.value,
             __otherDays.value,
             __standart.selection.index,
-            shapesVal.selection.index
+            shapesVal.selection.index,
+            __createStyle.value,
+            __linksFrames.value
         ].toString() + '\n' +
         __weekends.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
         winHolidays.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
@@ -1908,13 +1922,15 @@ function loadSettings() {
             __gutterY.text = $main[11];
             __daysPosition.selection = parseInt($main[12]);
             __weekNumbersPosition.selection = parseInt($main[13]);
-            __isDay.value = $main[14] === 'true' ? true : false;
-            __isWeek.value = $main[15] === 'true' ? true : false;
-            __isMonth.value = $main[16] === 'true' ? true : false;
-            __isYearInMonth.value = $main[17] === 'true' ? true : false;
-            __otherDays.value = $main[18] === 'true' ? true : false;
+            __isDay.value = ($main[14] === 'true');
+            __isWeek.value = ($main[15] === 'true');
+            __isMonth.value = ($main[16] === 'true');
+            __isYearInMonth.value = ($main[17] === 'true');
+            __otherDays.value = ($main[18] === 'true');
             __standart.selection = parseInt($main[19]);
             shapesVal.selection = parseInt($main[20]);
+            __createStyle.value = ($main[21] === 'true');
+            __linksFrames.value = ($main[22] === 'true');
             __weekends.text = $wnds;
             winHolidays.text = $holi;
             $margins = $mrgn;
@@ -1953,6 +1969,8 @@ function getCalendarData() {
         gutter_x:       __gutterX.text,
         gutter_y:       __gutterY.text,
         preset:         $preset,
+        notStyles:      !__createStyle.value,
+        linkFrames:     __linksFrames.value,
         weekends:       __weekends.text.replace(/ /g, '').split(','),
         enableFrames: {
             day: __isDay.value,

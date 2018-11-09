@@ -2008,5 +2008,12 @@ win.onClose = function() {
     return true;
 }
 
+win.onShow = function() {
+    if (!selection.length) {
+        __frameAutoSize.splice(2,1);
+        __frameAutoSize.splice(3,1);
+    }
+}
+
 win.center();
 win.show();

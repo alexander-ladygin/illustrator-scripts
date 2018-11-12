@@ -9,6 +9,12 @@
   www.ladygin.pro
 
 */
+Object.prototype.removeItemsWithArray = function (items) {var obj = [];for (var i = 0; i < this.length; i++) {if (!check(this[i])) {obj.push(this[i]);}}function check(e) {for (var j = 0; j < items.length; j++) {if (e === items[j]) {return true;}}return false;}return obj;};
+Object.prototype.emptyLayers = function () {var arr = [];function check(layers) {var obj = [];for (var i = 0; i < layers.length; i++) {var subLayers = layers[i].subLayers(),emptySubLayers = layers[i].emptySubLayers(),count = subLayers.removeItemsWithArray(emptySubLayers).length;if (!count && !layers[i].pageItems.length) {obj = obj.concat(layers[i]);}}return obj;}var doc = this;for (var i = 0; i < doc.length; i++) {arr = arr.concat(check(doc[i].layers));}return arr;};
+Object.prototype.subLayers = function (level) {var arr = [], count = 0;if (level !== undefined) {level = level - 1;}function subLayers(layer) {var obj = [], sub = layer.layers;for (var j = 0; j < sub.length; j++) {obj = obj.concat(sub[j]);if ((level === undefined) || (sub[j].layers.length > 0 && count < level)) {obj = obj.concat(subLayers(sub[j], count++));count--;}}return obj;}var obj = this;for (var j = 0; j < obj.length; j++) {arr = arr.concat(subLayers(obj[j]));}return arr;};
+Object.prototype.emptySubLayers = function (level) {var arr = [], obj = this;function process(sub) {var sub_arr = [];sub = sub.subLayers(level).reverse();for (var i = 0; i < sub.length; i++) {if (sub[i].pageItems.length > 0) {var parents = sub[i].pageItems[0].getAllParents();parents.pop();sub_arr = sub_arr.concat(parents);}}return sub.removeItemsWithArray(sub_arr).reverse();}for (var i = 0; i < obj.length; i++) {arr = arr.concat(process(obj[i]));}return arr;};
+Array.prototype.remove = function(){var i = this.length; if (i > 0) while (i--) this[i].remove();}
+
 if (app.documents.length) {
     function getCustomNumbers ($str, items, returnItems) {
         var __num = $str.replace(/ /g, '').replace(/[^-0-9^,]/gim,'').split(','),
@@ -45,18 +51,6 @@ if (app.documents.length) {
         return arr;
     }
 
-    function removeEmptyLayers (layers) {
-        var n = layers.length,
-            isEmpty = true;
-        
-        while (n--) {
-            if (layers[n].layers.length) isEmpty = removeEmptyLayers(layers[n].layers);
-            if (isEmpty && !layers[n].pageItems.length) layers[n].remove();
-        }
-
-        return isEmpty;
-    }
-
 
     function __artboardItemsMoveToNewLayer (__artNumbers) {
         var arts = activeDocument.artboards,
@@ -82,7 +76,7 @@ if (app.documents.length) {
             selection = null;
         }
 
-        if (removeEmptyLayersCheckbox.value) removeEmptyLayers(activeDocument.layers);
+        if (removeEmptyLayersCheckbox.value) activeDocument.emptyLayers().remove();
     }
 
     var selectionBak = selection;

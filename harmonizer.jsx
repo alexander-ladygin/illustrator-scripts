@@ -205,9 +205,9 @@ function previewStart() {
     positionY.addEventListener(   'change', function (e) { previewStart(); });
 
 
-	function saveSettings() {
-		var $file = new File(settingFile.folder + settingFile.name),
-			data = [
+    function saveSettings() {
+        var $file = new File(settingFile.folder + settingFile.name),
+            data = [
                 valueColumns.text,
                 valueGutterX.text,
                 positionX.selection.index,
@@ -217,20 +217,20 @@ function previewStart() {
                 randomOrderCheckbox.value,
                 sortByPosition.value,
                 reverseOrder.value
-			].toString();
-	
-		$file.open('w');
-		$file.write(data);
-		$file.close();
-	}
-	
-	function loadSettings() {
-		var $file = File(settingFile.folder + settingFile.name);
-		if ($file.exists) {
-			try {
-				$file.open('r');
-				var data = $file.read().split('\n'),
-					$main = data[0].split(',');
+            ].toString();
+    
+        $file.open('w');
+        $file.write(data);
+        $file.close();
+    }
+    
+    function loadSettings() {
+        var $file = File(settingFile.folder + settingFile.name);
+        if ($file.exists) {
+            try {
+                $file.open('r');
+                var data = $file.read().split('\n'),
+                    $main = data[0].split(',');
                 valueColumns.text = $main[0];
                 valueGutterX.text = $main[1];
                 positionX.selection = parseInt($main[2]);
@@ -240,10 +240,10 @@ function previewStart() {
                 randomOrderCheckbox.value = ($main[6] === 'true');
                 sortByPosition.value = ($main[7] === 'true');
                 reverseOrder.value = ($main[8] === 'true');
-			} catch (e) {}
-			$file.close();
-		}
-	}
+            } catch (e) {}
+            $file.close();
+        }
+    }
 
 win.onClose = function () {
     if (isUndo) {

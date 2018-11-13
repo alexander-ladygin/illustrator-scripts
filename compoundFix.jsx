@@ -28,14 +28,14 @@ if (app.executeMenuCommand instanceof Function) {
             winButtons.orientation = 'column';
             winButtons.alignChildren = 'fill';
 
+        var cancel = winButtons.add('button', [0, 0, 30, 25], 'Cancel');
+            cancel.helpTip = 'Press Esc to Close';
+            cancel.onClick = function () { win.close(); }
+
         var ok = winButtons.add('button', undefined, 'Run fix');
             ok.helpTip = 'Press Enter to Run';
             ok.onClick = compoundFixAction;
             ok.active = true;
-
-        var cancel = winButtons.add('button', [0, 0, 30, 25], 'Cancel');
-            cancel.helpTip = 'Press Esc to Close';
-            cancel.onClick = function () { win.close(); }
 
         var progressBar = win.add('progressbar', [0, 0, 110, 5]),
             progressBarCounter = 100;

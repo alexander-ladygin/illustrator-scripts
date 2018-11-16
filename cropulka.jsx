@@ -200,6 +200,10 @@ var resolutionList = resGroup.add('dropdownlist', [0, 0, 120, 25], ['Screen (72 
 var includeHLI = globalGroup.add('checkbox', undefined, 'Include hidden & locked items');
     includeHLI.value = true;
 
+var onlySelection = globalGroup.add('checkbox', undefined, 'Crop only the selection (without artboards)');
+    onlySelection.onClick = function(e) { panel.enabled = !this.value; }
+    onlySelection.value = false;
+
 var winButtons = globalGroup.add('group');
     winButtons.orientation = 'row';
     winButtons.alignChildren = ['fill', 'fill'];
@@ -264,9 +268,11 @@ function cropArtboard (artboardIndex, __progressCounter) {
         art = activeDocument.artboards[artboardIndex];
         rect = art.artboardRect;
 
-        selection = null;
-        activeDocument.artboards.setActiveArtboardIndex(artboardIndex);
-        activeDocument.selectObjectsOnActiveArtboard();
+        if (!onlySelection.value) {
+            selection = null;
+            activeDocument.artboards.setActiveArtboardIndex(artboardIndex);
+            activeDocument.selectObjectsOnActiveArtboard();
+        }
 
         items = selection;
     }
@@ -277,6 +283,8 @@ function cropArtboard (artboardIndex, __progressCounter) {
             else {
                 return;
             }
+
+    if (!items.length) return;
 
 
     var target = items[0].parent,
@@ -480,8 +488,13 @@ function startAction() {
         progressBarCounter = progressBar.maxvalue,
         progressBarCounterExtra = (isRPM.value ? 2 : 1);
 
+    if (!onlySelection.value) {
+        selection = null;
+        app.redraw();
+    }
+
     if (!topItemCheckbox.value) {
-        if (activeArtboardRadio.value) {
+        if (activeArtboardRadio.value || onlySelection.value) {
             __indexs.push(__arts.getActiveArtboardIndex());
         }
             else {
@@ -517,9 +530,6 @@ function startAction() {
     win.close();
 }
 
-selection = null;
-app.redraw();
-
 function saveSettings() {
     var $file = new File(settingFile.folder + settingFile.name),
         data = [
@@ -533,7 +543,8 @@ function saveSettings() {
             maskRPM.value,
             resolutionList.selection.index,
             resolutionValue.text,
-            includeHLI.value
+            includeHLI.value,
+            onlySelection.value
         ].toString().replace(/,/g, '@');
 
     $file.open('w');
@@ -559,7 +570,9 @@ function loadSettings() {
                 resolutionList.selection = parseInt($main[8]);
                 resolutionValue.text = $main[9];
                 includeHLI.value = ($main[10] === 'true');
-                
+                onlySelection.value = ($main[11] === 'true');
+
+                panel.enabled = !onlySelection.value;
                 RPMGroup.enabled = isRPM.value;
                 resGroup.enabled = (maskRPM.value ? false : isRPM.value);
                 customArts.enabled = customArtboardsRadio.value;

@@ -456,9 +456,9 @@ var win = new Window('dialog', scriptName + copyright),
                 });
                 var __cmColorButton = add('button', [0, 0, 135, 25], 'Choose color..');
                 __cmColorButton.onClick = function() {
-                    $cropMarksColor = app.showColorPicker($.color($cropMarksColor.type, $cropMarksColor.values));
-                    $cropMarksColor.type = $cropMarksColor.typename;
-                    $cropMarksColor.values = $cropMarksColor.getColorValues();
+                    var $cropMarksColorNew = app.showColorPicker($.color($cropMarksColor.type, $cropMarksColor.values));
+                    $cropMarksColor.type = $cropMarksColorNew.typename;
+                    $cropMarksColor.values = $cropMarksColorNew.getColorValues();
                 }
             }
         }

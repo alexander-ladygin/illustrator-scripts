@@ -9,6 +9,7 @@
   www.ladygin.pro
 
 */
+app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 $.getUnits = function (val, def) {return 'px,pt,mm,cm,in,pc'.indexOf(val.slice(-2)) > -1 ? val.slice(-2) : def;};
 $.convertUnits = function (obj, b) {if (obj === undefined) {return obj;}if (b === undefined) {b = 'px';}if (typeof obj === 'number') {obj = obj + 'px';}if (typeof obj === 'string') {var unit = $.getUnits(obj),val = parseFloat(obj);if (unit && !isNaN(val)) {obj = val;}else if (!isNaN(val)) {obj = val; unit = 'px';}}if (((unit === 'px') || (unit === 'pt')) && (b === 'mm')) {obj = parseFloat(obj) / 2.83464566929134;}else if (((unit === 'px') || (unit === 'pt')) && (b === 'cm')) {obj = parseFloat(obj) / (2.83464566929134 * 10);}else if (((unit === 'px') || (unit === 'pt')) && (b === 'in')) {obj = parseFloat(obj) / 72;}else if ((unit === 'mm') && ((b === 'px') || (b === 'pt'))) {obj = parseFloat(obj) * 2.83464566929134;}else if ((unit === 'mm') && (b === 'cm')) {obj = parseFloat(obj) * 10;}else if ((unit === 'mm') && (b === 'in')) {obj = parseFloat(obj) / 25.4;}else if ((unit === 'cm') && ((b === 'px') || (b === 'pt'))) {obj = parseFloat(obj) * 2.83464566929134 * 10;}else if ((unit === 'cm') && (b === 'mm')) {obj = parseFloat(obj) / 10;}else if ((unit === 'cm') && (b === 'in')) {obj = parseFloat(obj) * 2.54;}else if ((unit === 'in') && ((b === 'px') || (b === 'pt'))) {obj = parseFloat(obj) * 72;}else if ((unit === 'in') && (b === 'mm')) {obj = parseFloat(obj) * 25.4;}else if ((unit === 'in') && (b === 'cm')) {obj = parseFloat(obj) * 25.4;}return parseFloat(obj);};
 
@@ -55,27 +56,27 @@ function minusOffset (topItem, items, nestingLevel) {
     var l = items.length,
         removeCollection = [];
 
-    if (l > 1) {
+    if (l > (!nestingLevel ? 1 : 0)) {
         selection = null;
         if (!nestingLevel) progressBarCounter = progressBar.maxvalue / l;
-
-        var firstItem = liveOffset(topItem.duplicate());
-        firstItem.name = firstItemName;
 
         for (var i = (!nestingLevel ? 1 : 0); i < l; i++) {
             if (__inGroups.value && (nestingLevel < $nesting) && items[i].typename === 'GroupItem') {
                 if (items[i].pageItems.length) minusOffset(topItem, items[i].pageItems, nestingLevel + 1);
             }
                 else {
-                    __group([items[i], firstItem.duplicate()], items[i]).selected = true;
+                    var firstItem = liveOffset(topItem.duplicate());
+                    firstItem.name = firstItemName;
+
+                    __group([items[i], firstItem], items[i]).selected = true;
                     app.executeMenuCommand('Live Pathfinder Minus Back');
                     app.executeMenuCommand('expandStyle');
                     try {
-                        selection[0].pageItems.getByName(firstItemName);
+                        selection[0].pageItems.getByName(firstItemName).remove();
                         removeCollection.push(selection[0]);
                     }
                         catch (e) {
-                            __ungroup(selection[0]);
+                            if (selection[0] && selection[0].typename === 'GroupItem') __ungroup(selection[0]);
                         }
                     selection = null;
                 }
@@ -85,9 +86,8 @@ function minusOffset (topItem, items, nestingLevel) {
                 win.update();
             }
         }
-        firstItem.remove();
         var j = removeCollection.length;
-        while (j--) removeCollection[j].remove();
+        if (j > 0) while (j--) removeCollection[j].remove();
     }
 
     return topItem;
@@ -182,7 +182,9 @@ var progressBar = win.add('progressbar'),
 function startAction() {
     $nesting = parseInt(__groupNesting.text) || 1000;
     globalGroup.enabled = false;
+    try{
     minusOffset(selection[0], selection, 0);
+    }catch(err){alert(err + '\n' + err.line);}
     win.close();
 }
 

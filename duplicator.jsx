@@ -154,7 +154,7 @@ var scriptName = 'Duplicator',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/'
-    }
+    },
     $winLocation = [0, 0],
     $size = {
         win: {

@@ -105,7 +105,6 @@ with (win.add('group')) {
         groupSets = add('checkbox', undefined, 'Group sets');
         groupSets.onClick = function() { previewStart(); }
     groupSets.value = false;
-    groupSets.hide();
 }
 
 var winButtons = win.add('group');
@@ -120,10 +119,9 @@ var cancel = winButtons.add('button', undefined, 'Cancel');
 var ok = winButtons.add('button', undefined, 'OK');
     ok.helpTip = 'Press Enter to Run';
     ok.onClick = function (e) {
-        if (preview.value && isUndo) app.undo();
-        startAction();
+        if (preview.value && isUndo) { isUndo = false; }
+            else { startAction(); isUndo = false; }
         if (toGroupCheckbox.value || groupSets.value) toGroupItems();
-        isUndo = false;
         win.close();
     };
     ok.active = true;
@@ -169,7 +167,7 @@ preview.onClick = function (e) { previewStart(); };
 
 function toGroupItems() {
     var items = selection,
-        i = items.length,
+        l = items.length,
         target = items[0].parent,
         globalGroup = (toGroupCheckbox.value ? target.groupItems.add() : target),
         columns = parseInt(valueColumns.text),
@@ -179,10 +177,10 @@ function toGroupItems() {
 
     for (var i = 0, j = 1; i < l; i++) {
         if (groupSets.value) {
-            if (i === total * j) { j++; $group = globalGroup.groupItems.add(); }
-            items[i].moveToBeginning($group);
+            if (i === total * j) { j++; $group = globalGroup.groupItems.add(); $group.move(globalGroup, ElementPlacement.PLACEATEND); }
+            items[i].move($group, ElementPlacement.PLACEATEND);
         }
-            else {
+            else if (toGroupCheckbox.value) {
                 items[i].moveToBeginning(globalGroup);
             }
     }

@@ -350,14 +350,15 @@ function toGroupItems() {
         target = items[0].parent,
         globalGroup = (toGroupCheckbox.value ? target.groupItems.add() : target),
         columns = parseInt(valueColumns.text),
-        rows = parseInt(valueColumns.text),
+        rows = parseInt(valueRows.text),
         total = columns * rows,
         $group = globalGroup.groupItems.add(),
         groups = [$group];
 
     for (var i = 0, j = 1; i < l; i++) {
         if (i === total * j) {
-            $group = globalGroup.groupItems.add(); $group.move(globalGroup, ElementPlacement.PLACEATEND);
+            $group = globalGroup.groupItems.add();
+            $group.move(globalGroup, ElementPlacement.PLACEATEND);
             groups.push($group);
             j++;
         }
@@ -442,14 +443,16 @@ function startAction() {
         offsetY = (chArtAutoSize.value ? ($art.bleed.top + $art.bleed.left) : (artOffsetY < 0 ? artOffsetY * -1 : artOffsetY)),
         total = columns * rows;
 
-    bnds[0] -= (artOffsetX / 2 + (gutter.x * 1.75));
-    bnds[2] -= (artOffsetX / 2 + (gutter.x * 1.75));
-    bnds[1] += (artOffsetY / 2 + (gutter.y * 1.75));
-    bnds[3] += (artOffsetY / 2 + (gutter.y * 1.75));
+    if (!chArtAutoSize.value) {
+        bnds[0] -= (artOffsetX / 2 + (gutter.x * 1.75));
+        bnds[2] -= (artOffsetX / 2 + (gutter.x * 1.75));
+        bnds[1] += (artOffsetY / 2 + (gutter.y * 1.75));
+        bnds[3] += (artOffsetY / 2 + (gutter.y * 1.75));
+    }
 
     gprops = {
-        sets: Math.round(l / columns * rows),
-        total: columns * rows,
+        sets: Math.round(l / total),
+        total: total,
         width: (bnds[4] + gutter.x) * columns - gutter.x + offsetX,
         height: (bnds[5] + gutter.y) * rows - gutter.y + offsetY,
         art: $art,
@@ -472,8 +475,8 @@ function startAction() {
             if (x === columns) { y++; x = 0; }
             if (i === total * __sc) { __sc++; sc++; y = 0; }
             if (sc === columns) { sr++; x = 0; sc = 1; }
-            items[i].left = bnds[0] + (sc >= 1 ? ((offsetX / 2 + bnds[4]) * sc - 1) : 0) + (bnds[4] + gutter.x) * (x + (columns * (sc - 1))) + __align(__posXValue, items[i][bounds]);
-            items[i].top = bnds[1] - (sr >= 1 ? ((offsetY / 2 + bnds[5]) * sr - 1) : 0) - (bnds[5] + gutter.y) * (y + (rows * (sr - 1))) - __align(__posYValue, items[i][bounds]);
+            items[i].left = bnds[0] + (sc >= 1 ? ((offsetX / (chArtAutoSize.value ? 2 : 1) + bnds[4]) * sc - 1) : 0) + (bnds[4] + gutter.x) * (x + (columns * (sc - 1))) + __align(__posXValue, items[i][bounds]);
+            items[i].top = bnds[1] - (sr >= 1 ? ((offsetY / (chArtAutoSize.value ? 2 : 1) + bnds[5]) * sr - 1) : 0) - (bnds[5] + gutter.y) * (y + (rows * (sr - 1))) - __align(__posYValue, items[i][bounds]);
         }
     }
         else {

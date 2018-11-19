@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 
   Program version: Adobe Illustrator CS5+
   Name: duplicator.jsx;
@@ -327,9 +327,9 @@ win.onClose = function() {
 }
 
 loadSettings();
-win.minimumSize = $size.win.min;
-win.maximumSize = $size.win.max;
-win.size = $size.win[$size.win.value];
+// win.minimumSize = $size.win.min;
+// win.maximumSize = $size.win.max;
+// win.size = $size.win[$size.win.value];
 win.update();
-// win.center();
+win.center();
 win.show();

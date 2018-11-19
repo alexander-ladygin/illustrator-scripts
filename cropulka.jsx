@@ -438,7 +438,9 @@ function cropArtboard (artboardIndex, __progressCounter) {
     function cropProcess (item) {
         var __target = item.parent,
             __group = __target.groupItems.add(),
-            __rectangle = rectangle.duplicate();
+            __rectangle = rectangle.duplicate(),
+            blendMode = item.blendingMode,
+            $opacity = item.opacity;
 
         __group.move(item, ElementPlacement.PLACEAFTER);
         item.moveToBeginning(__group);
@@ -453,6 +455,17 @@ function cropArtboard (artboardIndex, __progressCounter) {
     
         app.executeMenuCommand('Live Pathfinder Crop');
         app.executeMenuCommand('expandStyle');
+
+        var i = selection.length;
+        if (i > 0) while (i--) {
+            if (selection[i].typename === 'GroupItem') {
+                var j = selection[i].pageItems.length;
+                if (j > 0) while (j--) {
+                    selection[i].pageItems[j].blendingMode = blendMode;
+                    selection[i].pageItems[j].opacity = $opacity;
+                }
+            }
+        }
 
         // ungroup
         ungroupResult(selection);

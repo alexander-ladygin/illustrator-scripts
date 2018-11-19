@@ -19,112 +19,238 @@ var scriptName = 'SetMaker',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/'
+    },
+    gprops = {
+        sets: 0,
+        width: 0,
+        height: 0,
+    },
+    wSize = {
+        mode: 'max',
+        min: [240, 460],
+        max: [400, 400]
     };
 
-    var isUndo = false,
+var isUndo = false,
     win = new Window('dialog', scriptName + copyright);
     win.orientation = 'column';
     win.alignChildren = 'fill';
 
-var panel = win.add('panel', undefined, scriptName + ' setting');
-    panel.orientation = 'column';
-    panel.alignChildren = 'fill';
-    panel.margins = 20;
+var globalGroup = win.add('group');
+    globalGroup.orientation = 'row';
+    globalGroup.margins = 0;
 
-with (panel.add('group')) {
-    orientation = 'row';
-    alignChildren = 'left';
+with (panelLeft = globalGroup.add('panel', undefined, scriptName + ' setting')) {
+    orientation = 'column';
+    alignChildren = 'fill';
+    margins = [20, 20, 20, 5];
 
     with (add('group')) {
-        orientation = 'column';
+        orientation = 'row';
         alignChildren = 'left';
-        add('statictext', undefined, 'Columns:');
-        var valueColumns = add('edittext', [0, 0, 82, 25], 4);
+    
+        with (add('group')) {
+            orientation = 'column';
+            alignChildren = 'left';
+            add('statictext', undefined, 'Columns:');
+            var valueColumns = add('edittext', [0, 0, 82, 25], 4);
+        }
+        with (add('group')) {
+            orientation = 'column';
+            alignChildren = 'left';
+            add('statictext', undefined, 'Rows:');
+            var valueRows = add('edittext', [0, 0, 82, 25], 4);
+        }
     }
+    
+    var checkboxSize = add('checkbox', undefined,'Set the size of elements');
+        checkboxSize.onClick = function (e) {
+            valueGroup.enabled = this.value;
+            previewStart();
+        };
+        checkboxSize.value = false;
+    
+    with (valueGroup = add('group')) {
+        enabled = false;
+        orientation = 'row';
+        alignChildren = 'left';
+    
+        add('statictext', undefined, 'Items size:');
+        var valueSize = add('edittext', [0, 0, 100, 25], '80 px');
+    }
+
     with (add('group')) {
-        orientation = 'column';
-        alignChildren = 'left';
-        add('statictext', undefined, 'Rows:');
-        var valueRows = add('edittext', [0, 0, 82, 25], 4);
+        orientation = 'row';
+        alignChildren = ['fill', 'fill'];
+
+        with (add('group')) {
+            orientation = 'column';
+            alignChildren = 'left';
+
+            var captionGutterX = add('statictext', undefined, 'Gutter Cols:'),
+                valueGutterX = add('edittext', [0, 0, 80, 25], 0),
+                positionX = add('dropdownlist', [0, 0, 80, 25], ['Left', 'Center', 'Right']);
+                positionX.selection = 1;
+        }
+
+        with (add('group')) {
+            orientation = 'column';
+            alignChildren = 'left';
+
+            var captionGutterY = add('statictext', undefined, 'Gutter Rows:'),
+                valueGutterY = add('edittext', [0, 0, 80, 25], 0),
+                positionY = add('dropdownlist', [0, 0, 80, 25], ['Top', 'Middle', 'Bottom']);
+                positionY.selection = 1;
+        }
     }
-}
 
-var checkboxSize = panel.add('checkbox', undefined,'Set the size of elements');
-    checkboxSize.onClick = function (e) {
-        valueGroup.enabled = this.value;
-        previewStart();
-    };
-    checkboxSize.value = false;
+    with (add('group')) {
+        orientation = 'row';
 
-with (valueGroup = panel.add('group')) {
-    enabled = false;
-    orientation = 'row';
-    alignChildren = 'left';
+        var toGroupCheckbox = add('checkbox', undefined, 'Group'),
+            randomOrderCheckbox = add('checkbox', [0, 0, 100, 20], 'Random order');
+            randomOrderCheckbox.onClick = previewStart;
+    }
 
-    add('statictext', undefined, 'Items size:');
-    var valueSize = add('edittext', [0, 0, 100, 25], '80 px');
-}
+    with (add('group')) {
+        orientation = 'row';
 
-var groupGutter = panel.add('group');
-    groupGutter.orientation = 'row';
-    groupGutter.alignChildren = ['fill', 'fill'];
+        var sortByPosition = add('checkbox', undefined, 'Sort by Y'),
+            reverseOrder = add('checkbox', undefined, 'Reverse order');
+            sortByPosition.onClick = reverseOrder.onClick = previewStart;
+    }
 
-var groupGutterX = groupGutter.add('group');
-    groupGutterX.orientation = 'column';
-    groupGutterX.alignChildren = 'left';
-var captionGutterX = groupGutterX.add('statictext', undefined, 'Gutter Cols:'),
-    valueGutterX = groupGutterX.add('edittext', [0, 0, 80, 25], 0),
-    positionX = groupGutterX.add('dropdownlist', [0, 0, 80, 25], ['Left', 'Center', 'Right']);
-    positionX.selection = 1;
-
-var groupGutterY = groupGutter.add('group');
-    groupGutterY.orientation = 'column';
-    groupGutterY.alignChildren = 'left';
-var captionGutterY = groupGutterY.add('statictext', undefined, 'Gutter Rows:'),
-    valueGutterY = groupGutterY.add('edittext', [0, 0, 80, 25], 0),
-    positionY = groupGutterY.add('dropdownlist', [0, 0, 80, 25], ['Top', 'Middle', 'Bottom']);
-    positionY.selection = 1;
-
-var groupCheckbox = panel.add('group');
-    groupCheckbox.orientation = 'row';
-var toGroupCheckbox = groupCheckbox.add('checkbox', undefined, 'Group'),
-    randomOrderCheckbox = groupCheckbox.add('checkbox', [0, 0, 100, 20], 'Random order');
-    randomOrderCheckbox.onClick = previewStart;
-
-var sortReverseGroup = panel.add('group');
-    groupCheckbox.orientation = 'row';
-var sortByPosition = sortReverseGroup.add('checkbox', undefined, 'Sort by Y'),
-    reverseOrder = sortReverseGroup.add('checkbox', undefined, 'Reverse order');
-    sortByPosition.onClick = reverseOrder.onClick = previewStart;
-
-with (win.add('group')) {
-    orientation = 'row';
-    alignChildren = 'center';
-
-    var preview = add('checkbox', undefined, 'Preview'),
-        groupSets = add('checkbox', undefined, 'Group sets');
+    var groupSets = add('checkbox', undefined, 'Group sets each separately');
         groupSets.onClick = function() { previewStart(); }
-    groupSets.value = false;
+        groupSets.value = false;
+
+    var createArtPerSet = add('checkbox', undefined, 'Create artboards per set');
+        createArtPerSet.onClick = function() {
+            panelRight.enabled = this.value;
+            wSize.mode = this.value ? 'max' : 'min';
+            // win.size = wSize[wSize.mode];
+        }
+        createArtPerSet.value = false;
 }
 
-var winButtons = win.add('group');
-    winButtons.orientation = 'row';
-    winButtons.alignChildren = ['fill', 'fill'];
-    winButtons.margins = 0;
 
-var cancel = winButtons.add('button', undefined, 'Cancel');
-    cancel.helpTip = 'Press Esc to Close';
-    cancel.onClick = function () { win.close(); }
 
-var ok = winButtons.add('button', undefined, 'OK');
-    ok.helpTip = 'Press Enter to Run';
-    ok.onClick = function (e) {
-        if (preview.value && isUndo) { isUndo = false; }
-            else { startAction(); isUndo = false; }
-        if (toGroupCheckbox.value || groupSets.value) toGroupItems();
-        win.close();
-    };
-    ok.active = true;
+with (panelRight = globalGroup.add('panel', undefined, 'Artboards setting')) {
+    enabled = false;
+    orientation = 'column';
+    alignChildren = 'fill';
+    margins = [20, 20, 20, 25];
+
+    var chArtAutoSize = add('checkbox', undefined, 'Auto size (by set size)');
+    chArtAutoSize.onClick = function (e) { artSizeGroup.enabled = !this.value; artBleedGroup.enabled = this.value;  previewStart(); }
+    chArtAutoSize.value = true;
+
+    with (artSizeGroup = add('group')) {
+        enabled = false;
+        orientation = 'row';
+        alignChildren = 'fill';
+
+        with (add('group')) {
+            orientation = 'row';
+            alignChildren = 'left';
+            add('statictext', [0, 0, 20, 25], 'W:');
+            var etArtWidth = add('edittext', [0, 0, 82, 25], '100 px');
+            etArtWidth.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 10, Infinity); doubleValues(e, this.text, [etArtWidth, etArtHeight]); previewStart(); });
+        }
+        with (add('group')) {
+            orientation = 'row';
+            alignChildren = 'left';
+            add('statictext', [0, 0, 20, 25], 'H:');
+            var etArtHeight = add('edittext', [0, 0, 82, 25], '100 px');
+            etArtHeight.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 10, Infinity); doubleValues(e, this.text, [etArtWidth, etArtHeight]); previewStart(); });
+        }
+    }
+
+    with (artBleedGroup = add('group')) {
+        orientation = 'column';
+        alignChildren = 'fill';
+
+        with (add('group')) {
+            orientation = 'row';
+
+            with (add('group')) {
+                orientation = 'column';
+                alignChildren = 'left';
+                add('statictext', undefined, 'Bleed Top:');
+                var bleedTop = add('edittext', [0, 0, 112, 25], '0 px');
+                bleedTop.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); doubleValues(e, this.text, (e.shiftKey ? [bleedTop, bleedRight, bleedBottom, bleedLeft] : [bleedTop, bleedBottom])); previewStart(); });
+            }
+            with (add('group')) {
+                orientation = 'column';
+                alignChildren = 'left';
+                add('statictext', undefined, 'Bleed Right:');
+                var bleedRight = add('edittext', [0, 0, 112, 25], '0 px');
+                bleedRight.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); doubleValues(e, this.text, (e.shiftKey ? [bleedTop, bleedRight, bleedBottom, bleedLeft] : [bleedRight, bleedLeft])); previewStart(); });
+            }
+        }
+        with (add('group')) {
+            orientation = 'row';
+
+            with (add('group')) {
+                orientation = 'column';
+                alignChildren = 'left';
+                add('statictext', undefined, 'Bleed Bottom:');
+                var bleedBottom = add('edittext', [0, 0, 112, 25], '0 px');
+                bleedBottom.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); doubleValues(e, this.text, (e.shiftKey ? [bleedTop, bleedRight, bleedBottom, bleedLeft] : [bleedTop, bleedBottom])); previewStart(); });
+            }
+            with (add('group')) {
+                orientation = 'column';
+                alignChildren = 'left';
+                add('statictext', undefined, 'Bleed Left:');
+                var bleedLeft = add('edittext', [0, 0, 112, 25], '0 px');
+                bleedLeft.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); doubleValues(e, this.text, (e.shiftKey ? [bleedTop, bleedRight, bleedBottom, bleedLeft] : [bleedRight, bleedLeft])); previewStart(); });
+            }
+        }
+    }
+
+    var chEnableSetName = add('checkbox', undefined, 'Set name on artboard');
+    chEnableSetName.onClick = function (e) { artNameGroup.enabled = etArtName.enabled = this.value; }
+    chEnableSetName.value = true;
+    var etArtName = add('edittext', [0, 0, 180, 25], 'setMaker');
+
+    with (artNameGroup = add('group')) {
+        orientation = 'column';
+        alignChildren = 'left';
+
+        with (add('group')) {
+            orientation = 'row';
+            add('statictext', undefined, 'Prefix:');
+            var etArtNamePrefix = add('edittext', [0, 0, 185, 25], 'LA_');
+        }
+        with (add('group')) {
+            orientation = 'row';
+            add('statictext', undefined, 'Suffix:');
+            var etArtNameSuffix = add('edittext', [0, 0, 185, 25], '_www.ladygin.pro');
+        }
+    }
+}
+
+with (winButtons = win.add('group')) {
+    margins = 0;
+    orientation = 'row';
+    alignChildren = ['fill', 'fill'];
+
+    var preview = add('checkbox', undefined, 'Preview');
+
+    var cancel = add('button', undefined, 'Cancel');
+        cancel.helpTip = 'Press Esc to Close';
+        cancel.onClick = function () { win.close(); }
+
+    var ok = add('button', undefined, 'OK');
+        ok.helpTip = 'Press Enter to Run';
+        ok.onClick = function (e) {
+            if (preview.value && isUndo) { isUndo = false; }
+                else { startAction(); isUndo = false; }
+            toGroupItems();
+            win.close();
+        };
+        ok.active = true;
+}
 
 function inputNumberEvents (ev, _input, min, max, callback){
     var step,
@@ -150,6 +276,12 @@ function inputNumberEvents (ev, _input, min, max, callback){
                 else if (units) _input.text = parseFloat(_input.text) + ' ' + units;
         }
 }
+function doubleValues (ev, __value, items) {
+    if (ev.altKey && ((ev.keyName === 'Left') || (ev.keyName === 'Right'))) {
+        var i = items.length;
+        if (i > 0) while (i--) items[i].text = __value;
+    }
+}
 valueColumns.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 1, Infinity); previewStart(); });
 valueRows.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 1, Infinity); previewStart(); });
 valueSize.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); previewStart(); });
@@ -165,6 +297,53 @@ valueGutterY.addEventListener('keydown', function (e) {
 });
 preview.onClick = function (e) { previewStart(); };
 
+
+function __ungroup ($groups) {
+    var i = $groups.length;
+    if (i > 0) while (i--) {
+        var j = $groups[i].pageItems.length;
+        if (j > 0) while (j--) {
+            while (j--) $groups[i].pageItems[j].moveBefore($groups[i]);
+        }
+        $parent.remove();
+    }
+}
+
+function createArtboard (set, prevSet, removeOldArtboards) {
+    try {
+        var sBnds = set.geometricBounds,
+            $name = etArtNamePrefix.text + etArtName.text + etArtNameSuffix.text,
+            csBnds = {
+                w: (sBnds[2] - sBnds[0]),
+                h: -(sBnds[3] - sBnds[1]),
+                cx: sBnds[0] + (sBnds[2] - sBnds[0]) / 2,
+                cy: sBnds[1] - (-(sBnds[3] - sBnds[1])) / 2,
+            };
+
+        if (prevSet && (set.pageItems.length < (gprops.total))) {
+            csBnds.w = prevSet.geometricBounds[2] - prevSet.geometricBounds[0];
+            csBnds.h = -(prevSet.geometricBounds[3] - prevSet.geometricBounds[1]);
+        }
+
+        var artOfSet = activeDocument.artboards.add(chArtAutoSize.value ? [
+                sBnds[0] - gprops.art.bleed.left,
+                sBnds[1] + gprops.art.bleed.top,
+                sBnds[2] + gprops.art.bleed.right,
+                sBnds[3] - gprops.art.bleed.bottom
+            ] : [
+                sBnds[0] - (gprops.art.width - csBnds.w) / 2,
+                sBnds[1] + (gprops.art.height - csBnds.h) / 2,
+                sBnds[0] + gprops.art.width - (gprops.art.width - csBnds.w) / 2,
+                sBnds[1] - (gprops.art.height - (gprops.art.height - csBnds.h) / 2)
+            ]);
+
+        if (chEnableSetName.value) artOfSet.name = set.name = $name;
+
+        if (removeOldArtboards) activeDocument.artboards[0].remove();
+    }
+        catch (err) {}
+}
+
 function toGroupItems() {
     var items = selection,
         l = items.length,
@@ -173,17 +352,24 @@ function toGroupItems() {
         columns = parseInt(valueColumns.text),
         rows = parseInt(valueColumns.text),
         total = columns * rows,
-        $group = (groupSets.value ? globalGroup.groupItems.add() : 0);
+        $group = globalGroup.groupItems.add(),
+        groups = [$group];
 
     for (var i = 0, j = 1; i < l; i++) {
-        if (groupSets.value) {
-            if (i === total * j) { j++; $group = globalGroup.groupItems.add(); $group.move(globalGroup, ElementPlacement.PLACEATEND); }
-            items[i].move($group, ElementPlacement.PLACEATEND);
+        if (i === total * j) {
+            $group = globalGroup.groupItems.add(); $group.move(globalGroup, ElementPlacement.PLACEATEND);
+            groups.push($group);
+            j++;
         }
-            else if (toGroupCheckbox.value) {
-                items[i].moveToBeginning(globalGroup);
-            }
+        items[i].move($group, ElementPlacement.PLACEATEND);
     }
+
+    if (createArtPerSet.value) {
+        var j = l = groups.length, al = activeDocument.artboards.length;
+        if (al > 1) while (al-- > 1) activeDocument.artboards[al].remove();
+        if (j > 0) while (j--) createArtboard(groups[j], j > 0 ? groups[j - 1] : false, j === l - 1);
+    }
+    if (!groupSets.value) __ungroup(groups);
 }
 
 function selectionBounds (bounds, setWidthHeight, itemsize) {
@@ -240,7 +426,38 @@ function startAction() {
         columns = parseInt(valueColumns.text),
         rows = parseInt(valueRows.text),
         bnds = selectionBounds(bounds, checkboxSize.value, $.convertUnits(valueSize.text, 'px') || 0),
+        $art = {
+            width: $.convertUnits(etArtWidth.text, 'px'),
+            height: $.convertUnits(etArtHeight.text, 'px'),
+            bleed: {
+                top: $.convertUnits(bleedTop.text, 'px'),
+                right: $.convertUnits(bleedRight.text, 'px'),
+                bottom: $.convertUnits(bleedBottom.text, 'px'),
+                left: $.convertUnits(bleedLeft.text, 'px'),
+            }
+        },
+        artOffsetX = ($art.width - ((bnds[4] + gutter.x) * columns - gutter.x)) * 2,
+        artOffsetY = ($art.height - ((bnds[5] + gutter.y) * rows - gutter.y)) * 2,
+        offsetX = (chArtAutoSize.value ? ($art.bleed.left + $art.bleed.right) : (artOffsetX < 0 ? artOffsetX * -1 : artOffsetX)),
+        offsetY = (chArtAutoSize.value ? ($art.bleed.top + $art.bleed.left) : (artOffsetY < 0 ? artOffsetY * -1 : artOffsetY)),
         total = columns * rows;
+
+    bnds[0] -= (artOffsetX / 2 + (gutter.x * 1.75));
+    bnds[2] -= (artOffsetX / 2 + (gutter.x * 1.75));
+    bnds[1] += (artOffsetY / 2 + (gutter.y * 1.75));
+    bnds[3] += (artOffsetY / 2 + (gutter.y * 1.75));
+
+    gprops = {
+        sets: Math.round(l / columns * rows),
+        total: columns * rows,
+        width: (bnds[4] + gutter.x) * columns - gutter.x + offsetX,
+        height: (bnds[5] + gutter.y) * rows - gutter.y + offsetY,
+        art: $art,
+        offset: {
+            x: offsetX,
+            y: offsetY,
+        }
+    };
 
     function __align (__pos, __bnds) {
         if (__pos === 'middle') return (bnds[5] - (__bnds[1] - __bnds[3])) / 2;
@@ -255,8 +472,8 @@ function startAction() {
             if (x === columns) { y++; x = 0; }
             if (i === total * __sc) { __sc++; sc++; y = 0; }
             if (sc === columns) { sr++; x = 0; sc = 1; }
-            items[i].left = bnds[0] + (sc >= 1 ? (bnds[4] * sc - 1) : 0) + (bnds[4] + gutter.x) * (x + (columns * (sc - 1))) + __align(__posXValue, items[i][bounds]);
-            items[i].top = bnds[1] - (sr >= 1 ? (bnds[5] * sr - 1) : 0) - (bnds[5] + gutter.y) * (y + (rows * (sr - 1))) - __align(__posYValue, items[i][bounds]);
+            items[i].left = bnds[0] + (sc >= 1 ? ((offsetX / 2 + bnds[4]) * sc - 1) : 0) + (bnds[4] + gutter.x) * (x + (columns * (sc - 1))) + __align(__posXValue, items[i][bounds]);
+            items[i].top = bnds[1] - (sr >= 1 ? ((offsetY / 2 + bnds[5]) * sr - 1) : 0) - (bnds[5] + gutter.y) * (y + (rows * (sr - 1))) - __align(__posYValue, items[i][bounds]);
         }
     }
         else {
@@ -303,8 +520,18 @@ function previewStart() {
                 reverseOrder.value,
                 valueSize.text,
                 checkboxSize.value,
-                groupSets.value
-            ].toString();
+                groupSets.value,
+                chArtAutoSize.value,
+                etArtWidth.text,
+                etArtHeight.text,
+                bleedTop.text,
+                bleedRight.text,
+                bleedBottom.text,
+                bleedLeft.text,
+                chEnableSetName.value,
+                createArtPerSet.value,
+                valueRows.text,
+            ].toString() + '\n' + etArtName.text + '\n' + etArtNamePrefix.text + '\n' + etArtNameSuffix.text + '\n' + wSize.mode;
     
         $file.open('w');
         $file.write(data);
@@ -318,6 +545,10 @@ function previewStart() {
                 $file.open('r');
                 var data = $file.read().split('\n'),
                     $main = data[0].split(',');
+                    $names = data[1];
+                    $prefix = data[2];
+                    $suffix = data[3];
+                    $wSizeMode = data[4];
                 valueColumns.text = $main[0];
                 valueGutterX.text = $main[1];
                 positionX.selection = parseInt($main[2]);
@@ -330,8 +561,28 @@ function previewStart() {
                 valueSize.text = $main[9];
                 checkboxSize.value = ($main[10] === 'true');
                 groupSets.value = ($main[11] === 'true');
+                chArtAutoSize.value = ($main[12] === 'true');
+                etArtWidth.text = $main[13];
+                etArtHeight.text = $main[14];
+                bleedTop.text = $main[15];
+                bleedRight.text = $main[16];
+                bleedBottom.text = $main[17];
+                bleedLeft.text = $main[18];
+                chEnableSetName.value = ($main[19] === 'true');
+                createArtPerSet.value = ($main[20] === 'true');
+                valueRows.text = $main[21];
 
+                etArtName.text = $names;
+                etArtNamePrefix.text = $prefix;
+                etArtNameSuffix.text = $suffix;
+
+                panelRight.enabled = createArtPerSet.value;
                 valueGroup.enabled = checkboxSize.value;
+                artSizeGroup.enabled = !chArtAutoSize.value;
+                artBleedGroup.enabled = chArtAutoSize.value;
+                artNameGroup.enabled = etArtName.enabled = chEnableSetName.value;
+
+                wSize.mode = $wSizeMode || 'max';
             } catch (e) {}
             $file.close();
         }

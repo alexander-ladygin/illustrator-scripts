@@ -200,7 +200,7 @@ var resolutionList = resGroup.add('dropdownlist', [0, 0, 120, 25], ['Screen (72 
 var includeHLI = globalGroup.add('checkbox', undefined, 'Include hidden & locked items');
     includeHLI.value = true;
 
-var onlySelection = globalGroup.add('checkbox', undefined, 'Crop only the selection (without artboards)');
+var onlySelection = globalGroup.add('checkbox', undefined, 'Crop only the selection');
     onlySelection.onClick = function(e) { panel.enabled = !this.value; }
     onlySelection.value = false;
 

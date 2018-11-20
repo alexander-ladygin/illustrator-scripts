@@ -10,10 +10,17 @@
 
 */
 Object.prototype.removeItemsWithArray = function (items) {var obj = [];for (var i = 0; i < this.length; i++) {if (!check(this[i])) {obj.push(this[i]);}}function check(e) {for (var j = 0; j < items.length; j++) {if (e === items[j]) {return true;}}return false;}return obj;};
-Object.prototype.emptyLayers = function () {var arr = [];function check(layers) {var obj = [];for (var i = 0; i < layers.length; i++) {var subLayers = layers[i].subLayers(),emptySubLayers = layers[i].emptySubLayers(),count = subLayers.removeItemsWithArray(emptySubLayers).length;if (!count && !layers[i].pageItems.length) {obj = obj.concat(layers[i]);}}return obj;}var doc = this;for (var i = 0; i < doc.length; i++) {arr = arr.concat(check(doc[i].layers));}return arr;};
+Object.prototype.emptyLayers = function () {var arr = [];function check(layers) {var obj = [];for (var i = 0; i < layers.length; i++) {if (!layers[i].layers.length && !layers[i].pageItems.length) { obj.push(layers[i]); continue;} var subLayers = layers[i].subLayers(),emptySubLayers = layers[i].emptySubLayers(),count = subLayers.removeItemsWithArray(emptySubLayers).length;if (!count && !layers[i].pageItems.length) {obj = obj.concat(layers[i]);}}return obj;}var doc = this;for (var i = 0; i < doc.length; i++) {arr = arr.concat(check(doc[i].layers));}return arr;};
 Object.prototype.subLayers = function (level) {var arr = [], count = 0;if (level !== undefined) {level = level - 1;}function subLayers(layer) {var obj = [], sub = layer.layers;for (var j = 0; j < sub.length; j++) {obj = obj.concat(sub[j]);if ((level === undefined) || (sub[j].layers.length > 0 && count < level)) {obj = obj.concat(subLayers(sub[j], count++));count--;}}return obj;}var obj = this;for (var j = 0; j < obj.length; j++) {arr = arr.concat(subLayers(obj[j]));}return arr;};
 Object.prototype.emptySubLayers = function (level) {var arr = [], obj = this;function process(sub) {var sub_arr = [];sub = sub.subLayers(level).reverse();for (var i = 0; i < sub.length; i++) {if (sub[i].pageItems.length > 0) {var parents = sub[i].pageItems[0].getAllParents();parents.pop();sub_arr = sub_arr.concat(parents);}}return sub.removeItemsWithArray(sub_arr).reverse();}for (var i = 0; i < obj.length; i++) {arr = arr.concat(process(obj[i]));}return arr;};
 Array.prototype.remove = function(){var i = this.length; if (i > 0) while (i--) this[i].remove();}
+
+var scriptName = 'AIMTNL',
+    copyright = ' \u00A9 www.ladygin.pro',
+    settingFile = {
+        name: scriptName + '__setting.json',
+        folder: Folder.myDocuments + '/'
+    };
 
 if (app.documents.length) {
     function getCustomNumbers ($str, items, returnItems) {
@@ -64,7 +71,7 @@ if (app.documents.length) {
 
             if (layerNameCheckbox.value) layer.name = arts[__index].name;
 
-            while (j--) {
+            if (j > 0) while (j--) {
                 items[j].moveToBeginning(layer);
             }
         }
@@ -75,8 +82,6 @@ if (app.documents.length) {
             __move(selection, __artNumbers[i]);
             selection = null;
         }
-
-        if (removeEmptyLayersCheckbox.value) activeDocument.emptyLayers().remove();
     }
 
     var selectionBak = selection;
@@ -130,12 +135,51 @@ if (app.documents.length) {
 
         __artboardItemsMoveToNewLayer(__arts);
 
-        selection = selectionBak;
+        if (removeEmptyLayersCheckbox.value) [activeDocument].emptyLayers().remove();
+        // selection = selectionBak;
 
         win.close();
     }
 
     selection = null;
+    function saveSettings() {
+        var $file = new File(settingFile.folder + settingFile.name),
+            data = [
+                allArtboardsRadio.value,
+                customArtboardsRadio.value,
+                removeEmptyLayersCheckbox.value,
+                layerNameCheckbox.value
+            ].toString() + '\n' + customArts.text;
+        $file.open('w');
+        $file.write(data);
+        $file.close();
+    }
+    function loadSettings() {
+        var $file = File(settingFile.folder + settingFile.name);
+        if ($file.exists) {
+            try {
+                $file.open('r');
+                var data = $file.read().split('\n'),
+                    $main = data[0].split(','),
+                    $arts = data[1];
+                allArtboardsRadio.value = ($main[0] === 'true');
+                customArtboardsRadio.value = ($main[1] === 'true');
+                removeEmptyLayersCheckbox.value = ($main[2] === 'true');
+                layerNameCheckbox.value = ($main[3] === 'true');
+
+                customArts.text = $arts;
+                customArts.enabled = customArtboardsRadio.value;
+            } catch (e) {}
+            $file.close();
+        }
+    }
+
+    win.onClose = function () {
+        saveSettings();
+        return true;
+    }
+
+    loadSettings();
     win.center();
     win.show();
 

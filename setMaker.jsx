@@ -20,6 +20,7 @@ var scriptName = 'SetMaker',
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/'
     },
+    $items = selection,
     gprops = {
         sets: 0,
         width: 0,
@@ -244,8 +245,9 @@ with (winButtons = win.add('group')) {
     var ok = add('button', undefined, 'OK');
         ok.helpTip = 'Press Enter to Run';
         ok.onClick = function (e) {
+            var $items = selection;
             if (preview.value && isUndo) { isUndo = false; }
-                else { startAction(); isUndo = false; }
+                else { $items = startAction(); isUndo = false; }
             toGroupItems();
             win.close();
         };
@@ -309,7 +311,7 @@ function __ungroup ($groups) {
     }
 }
 
-function createArtboard (set, prevSet, removeOldArtboards) {
+function createArtboard (set, prevSet, removeOldArtboards, __number) {
     try {
         var sBnds = set.geometricBounds,
             $name = etArtNamePrefix.text + etArtName.text + etArtNameSuffix.text,
@@ -337,7 +339,7 @@ function createArtboard (set, prevSet, removeOldArtboards) {
                 sBnds[1] - (gprops.art.height - (gprops.art.height - csBnds.h) / 2)
             ]);
 
-        if (chEnableSetName.value) artOfSet.name = set.name = $name;
+        if (chEnableSetName.value) artOfSet.name = set.name = $name.replace(/\$/g, __number + 1);
 
         if (removeOldArtboards) activeDocument.artboards[0].remove();
     }
@@ -345,9 +347,8 @@ function createArtboard (set, prevSet, removeOldArtboards) {
 }
 
 function toGroupItems() {
-    var items = selection,
-        l = items.length,
-        target = items[0].parent,
+    var l = $items.length,
+        target = $items[0].parent,
         globalGroup = (toGroupCheckbox.value ? target.groupItems.add() : target),
         columns = parseInt(valueColumns.text),
         rows = parseInt(valueRows.text),
@@ -362,13 +363,13 @@ function toGroupItems() {
             groups.push($group);
             j++;
         }
-        items[i].move($group, ElementPlacement.PLACEATEND);
+        $items[i].move($group, ElementPlacement.PLACEATEND);
     }
 
     if (createArtPerSet.value) {
-        var j = l = groups.length, al = activeDocument.artboards.length;
+        var lj = l = groups.length, al = activeDocument.artboards.length;
         if (al > 1) while (al-- > 1) activeDocument.artboards[al].remove();
-        if (j > 0) while (j--) createArtboard(groups[j], j > 0 ? groups[j - 1] : false, j === l - 1);
+        if (j > 0) for (var j = 0; j < lj; j++) { createArtboard(groups[j], j > 0 ? groups[j - 1] : false, j === l - 1, j); }
     }
     if (!groupSets.value) __ungroup(groups);
 }
@@ -376,7 +377,7 @@ function toGroupItems() {
 function selectionBounds (bounds, setWidthHeight, itemsize) {
     bounds = (typeof bounds === 'string' && bounds.length && bounds.slice(0,1) === 'v' ? 'visibleBounds' : 'geometricBounds');
 
-    var arr = selection, x = [],
+    var arr = $items, x = [],
         y = [], w = [], h = [],
         size = [[], []],
         i = arr.length;
@@ -412,9 +413,9 @@ Array.prototype.randomArray = function() {
 
 function startAction() {
     var bounds = 'visibleBounds',
-        items = (sortByPosition.value ? selection.sort(function (a, b) {
+        items = (sortByPosition.value ? $items.sort(function (a, b) {
             return a[bounds][1] <= b[bounds][1];
-        }) : selection);
+        }) : $items);
     if (randomOrderCheckbox.value) items.randomArray();
     if (reverseOrder.value) items.reverse();
     var l = items.length,
@@ -482,6 +483,8 @@ function startAction() {
         else {
             isUndo = false;
         }
+
+    return items;
 }
 
 
@@ -490,7 +493,8 @@ function previewStart() {
         if (isUndo) app.undo();
             else isUndo = true;
 
-        startAction();
+        $items = selection;
+        $items = startAction();
         app.redraw();
     }
         else if (isUndo) {

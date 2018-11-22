@@ -13,6 +13,17 @@
 $.errorMessage = function (err) {alert(err + '\n' + err.line);};
 $.getUnits = function (val, def) {return 'px,pt,mm,cm,in,pc'.indexOf(val.slice(-2)) > -1 ? val.slice(-2) : def;};
 $.convertUnits = function (obj, b) {if (obj === undefined) {return obj;}if (b === undefined) {b = 'px';}if (typeof obj === 'number') {obj = obj + 'px';}if (typeof obj === 'string') {var unit = $.getUnits(obj),val = parseFloat(obj);if (unit && !isNaN(val)) {obj = val;}else if (!isNaN(val)) {obj = val; unit = 'px';}}if (((unit === 'px') || (unit === 'pt')) && (b === 'mm')) {obj = parseFloat(obj) / 2.83464566929134;}else if (((unit === 'px') || (unit === 'pt')) && (b === 'cm')) {obj = parseFloat(obj) / (2.83464566929134 * 10);}else if (((unit === 'px') || (unit === 'pt')) && (b === 'in')) {obj = parseFloat(obj) / 72;}else if ((unit === 'mm') && ((b === 'px') || (b === 'pt'))) {obj = parseFloat(obj) * 2.83464566929134;}else if ((unit === 'mm') && (b === 'cm')) {obj = parseFloat(obj) * 10;}else if ((unit === 'mm') && (b === 'in')) {obj = parseFloat(obj) / 25.4;}else if ((unit === 'cm') && ((b === 'px') || (b === 'pt'))) {obj = parseFloat(obj) * 2.83464566929134 * 10;}else if ((unit === 'cm') && (b === 'mm')) {obj = parseFloat(obj) / 10;}else if ((unit === 'cm') && (b === 'in')) {obj = parseFloat(obj) * 2.54;}else if ((unit === 'in') && ((b === 'px') || (b === 'pt'))) {obj = parseFloat(obj) * 72;}else if ((unit === 'in') && (b === 'mm')) {obj = parseFloat(obj) * 25.4;}else if ((unit === 'in') && (b === 'cm')) {obj = parseFloat(obj) * 25.4;}return parseFloat(obj);};
+Array.prototype.filter = function (callback) {
+    if (callback instanceof Function) {
+        var l = this.length, arr = [];
+        for (var i = 0; i < l; i++) {
+            if (callback(this[i])) {
+                arr.push(this[i]);
+            }
+        }
+    }
+        else return this;
+};
 
 var scriptName = 'SetMaker',
     copyright = ' \u00A9 www.ladygin.pro',
@@ -20,6 +31,7 @@ var scriptName = 'SetMaker',
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/'
     },
+    $batchFolderPath = Folder.myDocuments,
     $items = selection,
     gprops = {
         sets: 0,
@@ -231,6 +243,17 @@ with (panelRight = globalGroup.add('panel', undefined, 'Artboards setting')) {
     }
 }
 
+with (win.add('group')) {
+    margins = 0;
+    orientation = 'row';
+    alignChildren = ['fill', 'fill'];
+
+    add('statictext', undefined, 'File types (separator - comma ","):');
+    var fileTypes = add('edittext', [0, 0, 170, 25], 'svg, eps');
+    var batchButton = add('button', undefined, 'Batch files');
+    batchButton.onClick = batchFiles;
+}
+
 with (winButtons = win.add('group')) {
     margins = 0;
     orientation = 'row';
@@ -297,7 +320,60 @@ valueGutterY.addEventListener('keydown', function (e) {
         else inputNumberEvents(e, this, 0, Infinity);
     previewStart();
 });
+
 preview.onClick = function (e) { previewStart(); };
+
+function openFileMoveToActiveDocument (activeDoc, $file) {
+    try {
+        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
+        if (activeDocument.importFile instanceof Function) {
+            try {
+                activeDocument.importFile($file, false, false, $file.name);
+                app.redraw();
+            }
+                catch (e) {
+                    $.errorMessage(e);
+                }
+        }
+            else {
+                app.open($file);
+                var l = activeDocument.layers, i = l.length;
+                if (i > 0) while (i--) { l[i].hasSelectedArtwork = true; }
+                app.copy();
+                activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+                activeDoc.activate();
+                selection = null;
+                app.paste();
+                app.redraw();
+            }
+
+        return selection;
+    }
+        catch(e) {
+            $.errorMessage(e);
+        }
+}
+
+function batchFiles() {
+    var types = (',' + fileTypes.text.toLowerCase().replace(/ /g, '') + ','),
+        $folder = Folder.selectDialog(scriptName + ': Please select folder', new Folder($batchFolderPath));
+
+    if ($folder) {
+        $batchFolderPath = $folder.absoluteURI;
+
+        var __files = $folder.getFiles(function (f) {
+                return types.indexOf(',' + f.displayName.slice(f.displayName.indexOf('.') + 1) + ',') > -1;
+            }),
+            selBak = selection,
+            itemsFromFile = [];
+
+        for (var i = 0; i < __files.length; i++) {
+            itemsFromFile = itemsFromFile.concat(openFileMoveToActiveDocument(activeDocument, __files[i]));
+        }
+
+        selection = $items = selBak.concat(itemsFromFile);
+    }
+}
 
 
 function __ungroup ($groups) {
@@ -538,7 +614,7 @@ function previewStart() {
                 chEnableSetName.value,
                 createArtPerSet.value,
                 valueRows.text,
-            ].toString() + '\n' + etArtName.text + '\n' + etArtNamePrefix.text + '\n' + etArtNameSuffix.text + '\n' + wSize.mode;
+            ].toString() + '\n' + etArtName.text + '\n' + etArtNamePrefix.text + '\n' + etArtNameSuffix.text + '\n' + wSize.mode + '\n' + $batchFolderPath + '\n' + fileTypes.text;
     
         $file.open('w');
         $file.write(data);
@@ -551,11 +627,13 @@ function previewStart() {
             try {
                 $file.open('r');
                 var data = $file.read().split('\n'),
-                    $main = data[0].split(',');
-                    $names = data[1];
-                    $prefix = data[2];
-                    $suffix = data[3];
-                    $wSizeMode = data[4];
+                    $main = data[0].split(','),
+                    $names = data[1],
+                    $prefix = data[2],
+                    $suffix = data[3],
+                    $wSizeMode = data[4],
+                    $bfp = data[5],
+                    $fts = data[6];
                 valueColumns.text = $main[0];
                 valueGutterX.text = $main[1];
                 positionX.selection = parseInt($main[2]);
@@ -590,6 +668,8 @@ function previewStart() {
                 artNameGroup.enabled = etArtName.enabled = chEnableSetName.value;
 
                 wSize.mode = $wSizeMode || 'max';
+                $batchFolderPath = $bfp;
+                fileTypes.text = $fts;
             } catch (e) {}
             $file.close();
         }

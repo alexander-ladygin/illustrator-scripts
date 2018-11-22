@@ -58,11 +58,39 @@ var toGroupCheckbox = groupCheckbox.add('checkbox', undefined, 'Group'),
     randomOrderCheckbox = groupCheckbox.add('checkbox', [0, 0, 100, 20], 'Random order');
     randomOrderCheckbox.onClick = previewStart;
 
-var sortReverseGroup = panel.add('group');
-    groupCheckbox.orientation = 'row';
-var sortByPosition = sortReverseGroup.add('checkbox', undefined, 'Sort by Y'),
-    reverseOrder = sortReverseGroup.add('checkbox', undefined, 'Reverse order');
-    sortByPosition.onClick = reverseOrder.onClick = previewStart;
+// var sortReverseGroup = panel.add('group');
+    // groupCheckbox.orientation = 'row';
+
+with (panel.add('group')) {
+    orientation = 'column';
+    alignChildren = ['fill', 'fill'];
+
+    with (add('group')) {
+        orientation = 'row';
+        alignChildren = ['fill', 'fill'];
+
+        add('statictext', undefined, 'Sort items by:');
+        var reverseOrder = add('checkbox', undefined, 'Reverse order');
+    }
+    with (add('group')) {
+        orientation = 'row';
+        alignChildren = ['fill', 'fill'];
+
+        var sortByY = add('radiobutton', undefined, 'Y'),
+            sortByX = add('radiobutton', undefined, 'X'),
+            sortByS = add('radiobutton', undefined, 'S'),
+            sortByW = add('radiobutton', undefined, 'W'),
+            sortByH = add('radiobutton', undefined, 'H');
+        sortByY.helpTip = 'Sort by Top to Bottom';
+        sortByX.helpTip = 'Sort by Left to Right';
+        sortByS.helpTip = 'Sort by Size (width + height) max to min';
+        sortByW.helpTip = 'Sort by Width max to min';
+        sortByH.helpTip = 'Sort by Height min to max';
+    }
+}
+
+
+sortByY.onClick = sortByX.onClick = sortByW.onClick = sortByH.onClick = sortByS.onClick = reverseOrder.onClick = previewStart;
 
 var preview = win.add('checkbox', undefined, 'Preview');
 
@@ -146,9 +174,17 @@ Array.prototype.randomArray = function() {
 
 function startAction() {
     var bounds = 'visibleBounds',
-        items = (sortByPosition.value ? selection.sort(function (a, b) {
-            return a[bounds][1] <= b[bounds][1];
-        }) : selection);
+        items = (sortByY.value ? selection.sort(function (a, b) {
+                    return a[bounds][1] <= b[bounds][1];
+                }) : (sortByX.value ? selection.sort(function (a, b) {
+                    return a[bounds][0] >= b[bounds][0];
+                }) : (sortByS.value ? selection.sort(function (a, b) {
+                    return a.width + a.height <= b.width + b.height;
+                }) : (sortByW.value ? selection.sort(function (a, b) {
+                    return a.width <= b.width;
+                }) : (sortByH.value ? selection.sort(function (a, b) {
+                    return a.height <= b.height;
+                }) : selection)))));
     if (randomOrderCheckbox.value) items.randomArray();
     if (reverseOrder.value) items.reverse();
     var l = items.length, __rows = 0,
@@ -215,8 +251,12 @@ function previewStart() {
                 positionY.selection.index,
                 toGroupCheckbox.value,
                 randomOrderCheckbox.value,
-                sortByPosition.value,
-                reverseOrder.value
+                sortByY.value,
+                reverseOrder.value,
+                sortByX.value,
+                sortByW.value,
+                sortByH.value,
+                sortByS.value
             ].toString();
     
         $file.open('w');
@@ -238,8 +278,12 @@ function previewStart() {
                 positionY.selection = parseInt($main[4]);
                 toGroupCheckbox.value = ($main[5] === 'true');
                 randomOrderCheckbox.value = ($main[6] === 'true');
-                sortByPosition.value = ($main[7] === 'true');
+                sortByY.value = ($main[7] === 'true');
                 reverseOrder.value = ($main[8] === 'true');
+                sortByX.value = ($main[9] === 'true');
+                sortByW.value = ($main[10] === 'true');
+                sortByH.value = ($main[11] === 'true');
+                sortByS.value = ($main[12] === 'true');
             } catch (e) {}
             $file.close();
         }

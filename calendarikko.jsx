@@ -119,6 +119,8 @@ function calendarikko(userOptions) {
                 full-bottom
                 circle
                 circle-compact
+                full-columns
+                full-rows
             */
             preset: 'days-title-top, week-numbers-left',
             /* 
@@ -1031,8 +1033,8 @@ function calendarikko(userOptions) {
         }
 
         // body set font size
-        frame.textRange.characterAttributes.baselineShift = bodyStyle.characterAttributes.baselineShift;
-        frame.textRange.characterAttributes.size = bodyStyle.characterAttributes.size;
+        // frame.textRange.characterAttributes.baselineShift = bodyStyle.characterAttributes.baselineShift;
+        // frame.textRange.characterAttributes.size = bodyStyle.characterAttributes.size;
 
         // months
         if (options.enableFrames.month) {
@@ -1499,6 +1501,32 @@ function calendarikko(userOptions) {
                     }
                     break;
                 };
+                case 'full-columns': {
+                    var valX = allMonths, valY = 1;
+                    if (options.frameWidth === false) options.frameWidth = ((artWidth - options.margin[1] - options.margin[3]) - (options.gutter_x * valX)) / valX + (options.gutter_x / valX);
+                    if (options.frameHeight === false) options.frameHeight = (artHeight - options.margin[0] - options.margin[2]);
+
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, x++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
+                    }
+                    break;
+                };
+                case 'full-rows': {
+                    var valX = 1, valY = allMonths;
+                    if (options.frameWidth === false) options.frameWidth = (artWidth - options.margin[1] - options.margin[3]);
+                    if (options.frameHeight === false) options.frameHeight = ((artHeight - options.margin[0] - options.margin[2]) - (options.gutter_y * valY)) / valY + (options.gutter_y / valY);
+
+                    for (var i = m = options.startMonth - 1, x = 0, y = 0; i < allMonths; i++, y++, m++) {
+                        $date.setFullYear(options.startYear);
+                        $date.setDate(1);
+                        $date.setMonth(m);
+                        createMonth($layer, x, y, options.rect[0], options.rect[1]);
+                    }
+                    break;
+                };
             }
         }
             else {
@@ -1682,7 +1710,7 @@ var win = new Window('dialog', scriptName + copyright),
                     orientation = 'column';
                     alignChildren = 'fill';
                     add('statictext', undefined, 'Template:');
-                    var __template = add('dropdownlist', undefined, '3x4,4x3,6x2-top,6x2-bottom,6|6,left-bottom,top-right,full-top,full-bottom,circle,circle-compact'.split(','));
+                    var __template = add('dropdownlist', undefined, '3x4,4x3,6x2-top,6x2-bottom,6|6,left-bottom,top-right,full-top,full-bottom,circle,circle-compact,full-columns,full-rows'.split(','));
                     __template.selection = 0;
                 }
             }

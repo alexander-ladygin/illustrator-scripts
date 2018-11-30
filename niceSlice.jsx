@@ -36,45 +36,51 @@ function getPosAnchors (anchors, xORy) {
 
 function niceSlice (item, userOptions) {
     var options = {
-        orientation: 'x',
+        orientation: 'y',
         fragments:    10,
-        rotate:       20,
-        gutter:       50
+        rotate:       45,
+        gutter:       5
     }.extend(userOptions || {});
 
     var bnds = item.visibleBounds,
+        $w = bnds[2] - bnds[0],
+        $h = bnds[1] - bnds[3],
         isOX = (options.orientation === 'x');
-        // checkSizeRect = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
+    var checkSizeRect = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
 
-    // checkSizeRect.rotate(options.rotate);
+    checkSizeRect.rotate(options.rotate);
 
-    // var pointsX = getPosAnchors(checkSizeRect.pathPoints, 0).sort(function (a, b) { return a > b; }),
-    //     pointsY = getPosAnchors(checkSizeRect.pathPoints, 1).sort(function (a, b) { return a < b; });
+    var pointsX = getPosAnchors(checkSizeRect.pathPoints, 0).sort(function (a, b) { return a > b; }),
+        pointsY = getPosAnchors(checkSizeRect.pathPoints, 1).sort(function (a, b) { return a < b; });
 
     var __extraSize = {
-            // w: (item.width <= item.height && isOX ? pointsX[2] - pointsX[0] : 0),
-            // h: (item.width >= item.height && !isOX ? pointsY[0] - pointsY[2] : 0),
-            w: 0,
-            h: 0,
+            w: (item.width <= item.height && isOX ? pointsX[2] - pointsX[0] : 0),
+            h: (item.width >= item.height && !isOX ? pointsY[0] - pointsY[2] : 0),
+            // w: 0,
+            // h: 0,
         };
 
-    // if (__extraSize.w < 0) __extraSize.w *= -1;
-    // if (__extraSize.h < 0) __extraSize.h *= -1;
+    if (__extraSize.w < 0) __extraSize.w *= -1;
+    if (__extraSize.h < 0) __extraSize.h *= -1;
     // // __extraSize.w /= 1.5;
     // // __extraSize.h /= 1.3;
     // if (isOX) __extraSize.w -= options.gutter;
     // if (!isOX) __extraSize.h += options.gutter;
     // checkSizeRect.remove();
 
-    var __adv = 4,
-        $w = bnds[2] - bnds[0],
-        $h = bnds[1] - bnds[3],
-        __w = $w * (!isOX ? __adv : 1) / (isOX ? options.fragments : 1) - (isOX ? options.gutter : 0) + (isOX ? options.gutter / options.fragments : 0),
-        __h = $h * (isOX ? __adv : 1) / (!isOX ? options.fragments : 1) - (!isOX ? options.gutter : 0) + (!isOX ? options.gutter / options.fragments : 0),
+    alert(__extraSize.w + '\n' + __extraSize.h);
+
+    var __adv = 1,
+        __w = $w / (isOX ? options.fragments : 1) - (isOX ? options.gutter : 0) + (isOX ? options.gutter / options.fragments : 0),
+        __h = $h / (!isOX ? options.fragments : 1) - (!isOX ? options.gutter : 0) + (!isOX ? options.gutter / options.fragments : 0),
+        // __w = $w * (!isOX ? __adv : 1) / (isOX ? options.fragments : 1) - (isOX ? options.gutter : 0) + (isOX ? options.gutter / options.fragments : 0),
+        // __h = $h * (isOX ? __adv : 1) / (!isOX ? options.fragments : 1) - (!isOX ? options.gutter : 0) + (!isOX ? options.gutter / options.fragments : 0),
         // __t = bnds[1] + (isOX ? ($h * __adv - $h) / 2 : 0) + (!isOX ?  + (__h + options.gutter) * 2 : 0),
         // __l = bnds[0] - (!isOX ? (($w * __adv - $w) / 2) : 0) - (isOX ? (__w + options.gutter) * 2 : 0),
-        __t = bnds[1] + (isOX ? (__h - $h) / 2 : 0),
-        __l = bnds[0] - (!isOX ? (__w * $w) / 2 : 0),
+        __t = bnds[1],
+        __l = bnds[0],
+        // __t = bnds[1] + (isOX ? (__h - $h) / 2 : 0),
+        // __l = bnds[0] - (!isOX ? (__w * $w) / 2 : 0),
         fragments = [],
         rectgls = [],
         node, group;
@@ -88,17 +94,18 @@ function niceSlice (item, userOptions) {
         rectgls.push(group.pathItems.rectangle(__t - (!isOX ? (__h + options.gutter) * i : 0), __l + (isOX ? (__w + options.gutter) * i : 0), __w, __h));
     }
     group.rotate(options.rotate);
-    var cmask = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
-    cmask.moveToBeginning(group);
-    group.clipped = true;
-    cmask.clipping = true;
-    // return; 
-    group.selected = true;
-    app.executeMenuCommand('Live Pathfinder Merge');
-    app.executeMenuCommand('expandStyle');
-    ungroup(selection[0]);
-    rectgls = selection;
-    selection = null;
+    ungroup(group);
+    // var cmask = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
+    // cmask.moveToBeginning(group);
+    // group.clipped = true;
+    // cmask.clipping = true;
+    // // return; 
+    // group.selected = true;
+    // app.executeMenuCommand('Live Pathfinder Merge');
+    // app.executeMenuCommand('expandStyle');
+    // ungroup(selection[0]);
+    // rectgls = selection;
+    // selection = null;
     // return;
 
     for (var i = 0; i < options.fragments; i++) {
@@ -120,7 +127,7 @@ function niceSlice (item, userOptions) {
         // app.executeMenuCommand('expandStyle');
     }
 
-    item.hidden = true;
+    item.remove();
 
     return fragments;
 }

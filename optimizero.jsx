@@ -12,7 +12,7 @@ var scriptName = 'Optimizero',
     copyright = ' \u00A9 www.ladygin.pro',
     settingFile = {
         name: scriptName + '__setting.json',
-        folder: Folder.myDocuments + '/'
+        folder: Folder.myDocuments + '/LA_AI_Scripts/'
     };
 
 $.errorMessage = function (err) {alert(err + '\n' + err.line);};
@@ -295,6 +295,12 @@ win.onClose = function() {
     return true;
 }
 
+function checkSettingFolder() {
+    var $folder = new Folder(settingFile.folder);
+    if (!$folder.exists) $folder.create();
+}
+
+checkSettingFolder();
 loadSettings();
 win.center();
 win.show();

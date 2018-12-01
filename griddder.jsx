@@ -49,7 +49,7 @@ var scriptName = 'Griddder',
     copyright = ' \u00A9 www.ladygin.pro',
     settingFile = {
         name: scriptName + '__setting.json',
-        folder: Folder.myDocuments + '/'
+        folder: Folder.myDocuments + '/LA_AI_Scripts/'
     },
     $margins = '0',
     $cropMarksColor = {
@@ -591,6 +591,12 @@ win.onClose = function() {
     return true;
 }
 
+function checkSettingFolder() {
+    var $folder = new Folder(settingFile.folder);
+    if (!$folder.exists) $folder.create();
+}
+
+checkSettingFolder();
 loadSettings();
 win.center();
 win.show();

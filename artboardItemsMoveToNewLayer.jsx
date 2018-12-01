@@ -19,7 +19,7 @@ var scriptName = 'AIMTNL',
     copyright = ' \u00A9 www.ladygin.pro',
     settingFile = {
         name: scriptName + '__setting.json',
-        folder: Folder.myDocuments + '/'
+        folder: Folder.myDocuments + '/LA_AI_Scripts/'
     };
 
 if (app.documents.length) {
@@ -174,11 +174,17 @@ if (app.documents.length) {
         }
     }
 
+    function checkSettingFolder() {
+        var $folder = new Folder(settingFile.folder);
+        if (!$folder.exists) $folder.create();
+    }
+
     win.onClose = function () {
         saveSettings();
         return true;
     }
 
+    checkSettingFolder();
     loadSettings();
     win.center();
     win.show();

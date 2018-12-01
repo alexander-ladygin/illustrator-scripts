@@ -12,7 +12,7 @@
 var scriptName = 'ReplaceItems',
     settingFile = {
         name: scriptName + '__setting.json',
-        folder: Folder.myDocuments + '/'
+        folder: Folder.myDocuments + '/LA_AI_Scripts/'
     };
 
 var win = new Window('dialog', scriptName + ' \u00A9 www.ladygin.pro');
@@ -220,6 +220,12 @@ win.onClose = function() {
     return true;
 }
 
+function checkSettingFolder() {
+    var $folder = new Folder(settingFile.folder);
+    if (!$folder.exists) $folder.create();
+}
+
+checkSettingFolder();
 loadSettings();
 win.center();
 win.show();

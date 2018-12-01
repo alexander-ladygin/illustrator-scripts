@@ -17,7 +17,7 @@ var scriptName = 'NiceSlice',
     copyright = ' \u00A9 www.ladygin.pro',
     settingFile = {
         name: scriptName + '__setting.json',
-        folder: Folder.myDocuments + '/'
+        folder: Folder.myDocuments + '/LA_AI_Scripts/'
     };
 
 function ungroup (group) {

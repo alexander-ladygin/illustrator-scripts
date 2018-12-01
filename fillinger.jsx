@@ -17,7 +17,7 @@ else {
     var scriptName = 'Fillinger',
         settingFile = {
             name: scriptName + '__setting.json',
-            folder: Folder.myDocuments + '/'
+            folder: Folder.myDocuments + '/LA_AI_Scripts/'
         };
 
     function inputNumberEvents (ev, _input, min, max, callback){
@@ -417,6 +417,12 @@ else {
         return true;
     }
 
+    function checkSettingFolder() {
+        var $folder = new Folder(settingFile.folder);
+        if (!$folder.exists) $folder.create();
+    }
+
+    checkSettingFolder();
     loadSettings();
     win.center();
     win.show();

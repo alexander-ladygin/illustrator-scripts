@@ -17,7 +17,7 @@ var scriptName = 'minusOffset',
     copyright = ' \u00A9 www.ladygin.pro',
     settingFile = {
         name: scriptName + '__setting.json',
-        folder: Folder.myDocuments + '/'
+        folder: Folder.myDocuments + '/LA_AI_Scripts/'
     },
     firstItemName = '__' + scriptName + '__firstName',
     $nesting = 1000;
@@ -226,6 +226,12 @@ win.onClose = function(){
     saveSettings();
 }
 
+function checkSettingFolder() {
+    var $folder = new Folder(settingFile.folder);
+    if (!$folder.exists) $folder.create();
+}
+
+checkSettingFolder();
 loadSettings();
 win.center();
 win.show();

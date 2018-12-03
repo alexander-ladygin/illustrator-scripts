@@ -118,7 +118,7 @@ function circular (userOptions) {
         // reset rotate from the item
         if (options.resetItem) node.rotate(angle * -1, true, true, true, true, Transformation.CENTER);
         // rotate only item
-        if (options.isRotateItem) node.rotate(options.rotateItemAngle * CCW, true, true, true, true, Transformation.CENTER);
+        if (options.isRotateItem) node.rotate((__randomRotate.value ? Math.floor(Math.random() * 360) : options.rotateItemAngle * CCW), true, true, true, true, Transformation.CENTER);
     
         centerPoint.remove();
         ungroup($group);
@@ -172,7 +172,7 @@ with (panel = win.add('panel')) {
         orientation = 'row';
 
         add('statictext', [0, 0, 80, 25], 'Start angle:').justify = 'center';
-        var __startAngleSlider = add('slider', [0, 0, 140, 15], 0, 0, 359),
+        var __startAngleSlider = add('slider', [0, 0, 150, 15], 0, 0, 359),
             __startAngle = add('edittext', [0, 0, 40, 25], 0);
         __startAngleSlider.onChanging = function (e) { __startAngle.text = Math.round(this.value); normalizeAngle(Math.round(this.value), __startAngle, 1, 360); }
         __startAngleSlider.onChange = function (e) { previewStart(); }
@@ -183,7 +183,7 @@ with (panel = win.add('panel')) {
         orientation = 'row';
 
         var __isEndAngle = add('checkbox', [0, 0, 80, 25], 'End angle:'),
-            __endAngleSlider = add('slider', [0, 0, 140, 15], 360, 1, 360),
+            __endAngleSlider = add('slider', [0, 0, 150, 15], 360, 1, 360),
             __endAngle = add('edittext', [0, 0, 40, 25], 360);
         __endAngleSlider.onChanging = function (e) { __endAngle.text = Math.round(this.value); normalizeAngle(Math.round(this.value), __endAngle, 1, 360); }
         __endAngleSlider.onChange = function (e) { previewStart(); }
@@ -196,15 +196,24 @@ with (panel = win.add('panel')) {
     with (add('group')) {
         orientation = 'row';
 
-        var __isRotateItem = add('checkbox', [0, 0, 100, 25], 'R each items:'),
-            __rotateItemSlider = add('slider', [0, 0, 120, 15], 360, 0, 360),
+        var __isRotateItem = add('checkbox', undefined, 'Rotate each items'),
+            __randomRotate = add('checkbox', undefined, 'Random R each items');
+
+        __isRotateItem.onClick = function () {
+            __randomRotate.enabled = this.value;
+            __rotateItemSlider.enabled = __rotateItemAngle.enabled = (this.value && __randomRotate.value ? false : this.value);
+            previewStart();
+        }
+        __randomRotate.onClick = function () { __rotateItemSlider.enabled = __rotateItemAngle.enabled = !this.value; previewStart(); }
+    }
+    with (add('group')) {
+        var __rotateItemSlider = add('slider', [0, 0, 240, 15], 360, 0, 360),
             __rotateItemAngle = add('edittext', [0, 0, 40, 25], 360);
+
         __rotateItemSlider.onChanging = function (e) { __rotateItemAngle.text = Math.round(this.value); normalizeAngle(Math.round(this.value), __rotateItemAngle, 0, 360); }
         __rotateItemSlider.onChange = function (e) { previewStart(); }
         __rotateItemAngle.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, 360); __rotateItemSlider.value = Math.round(this.text); });
         __rotateItemAngle.addEventListener('keyup', function (e) { previewStart(); });
-
-        __isRotateItem.onClick = function () { __rotateItemSlider.enabled = __rotateItemAngle.enabled = this.value; previewStart(); }
         __rotateItemSlider.enabled = __rotateItemAngle.enabled = false;
     }
 
@@ -265,10 +274,16 @@ with (win.add('group')) {
     preview.onClick = function() { previewStart(); }
     cancelBtn.onClick = function() { win.close(); }
     applyBtn.onClick = function() {
-        if (preview.value && isUndo) app.undo();
-        startAction();
-        isUndo = false;
-        win.close();
+        if (preview.value && isUndo) {
+            isUndo = false;
+            win.close();
+        }
+            else {
+                app.undo();
+                startAction();
+                isUndo = false;
+                win.close();
+            }
     }
 }
 
@@ -340,7 +355,8 @@ function saveSettings() {
             __copies.text,
             __isRotateItem.value,
             __rotateItemSlider.value,
-            __rotateItemAngle.text
+            __rotateItemAngle.text,
+            __randomRotate.value
         ].toString();
 
     $file.open('w');
@@ -372,10 +388,12 @@ function loadSettings() {
             __isRotateItem.value = ($main[13] === 'true');
             __rotateItemSlider.value = parseInt($main[14]);
             __rotateItemAngle.text = $main[15];
+            __randomRotate.value = ($main[16] === 'true');
 
             __copies.enabled = __copiesEnabled.value;
             __endAngleSlider.enabled = __endAngle.enabled = __isEndAngle.value;
-            __rotateItemSlider.enabled = __rotateItemAngle.enabled = __isRotateItem.value;
+            __randomRotate.enabled = __isRotateItem.value;
+            __rotateItemSlider.enabled = __rotateItemAngle.enabled = (__isRotateItem.value && __randomRotate.value ? false : __isRotateItem.value);
         } catch (e) {}
         $file.close();
     }

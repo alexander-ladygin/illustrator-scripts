@@ -31,10 +31,18 @@ function ungroup (group) {
     group.remove();
 }
 
+function rvbn (min, max) {
+    // random value between numbers 
+    return min + Math.floor(Math.random() * (max - min));
+}
+
 function circular (userOptions) {
     var options = {
         copies: 7,
         offset: 200,
+        offsetRandom: false,
+        offsetMin: '0 px',
+        offsetMax: '0 px',
         angleStart: 0,
         angleEnd:  360,
         notCopies: true,
@@ -53,6 +61,8 @@ function circular (userOptions) {
     options.direction = options.direction.toLowerCase().slice(0,1);
     options.copies = (options.copies > 0 ? options.copies : 1);
     options.offset = $.convertUnits(options.offset, 'px');
+    options.offsetMin = $.convertUnits(options.offsetMin, 'px');
+    options.offsetMax = $.convertUnits(options.offsetMax, 'px');
 
     var sbnds = $.getBounds($items, options.bounds),
         cpos = {
@@ -83,7 +93,7 @@ function circular (userOptions) {
     function toRotate (item, angle, $pos) {
         angle *= CCW;
 
-        var $offset = options.offset,
+        var $offset = (options.offsetRandom ? rvbn(options.offsetMin, options.offsetMax) : options.offset),
             bnds = item[options.bounds],
             $w = bnds[2] - bnds[0],
             $h = bnds[1] - bnds[3];
@@ -162,6 +172,21 @@ function normalizeAngle (val, item, min, max) {
         }
 }
 
+function normalizeOffset (val, item, min, max, units) {
+    if (item === __offsetMin) {
+        if (val > $.convertUnits(__offsetMax.text, 'px')) {
+            __offsetMax.text = ((val + 1) >= max ? max : val + 1) + (units ? ' ' + units : '');
+        }
+    }
+        else if (item === __offsetMax) {
+            if (val < $.convertUnits(__offsetMin.text, 'px')) {
+                __offsetMin.text = ((val - 1) <= min ? min - 1 : val - 1) + (units ? ' ' + units : '');
+            }
+        }
+
+    if (units) item.text += ' ' + units;
+}
+
 var win = new Window('dialog', scriptName + copyright);
 win.alignChildren = 'fill';
 
@@ -172,8 +197,8 @@ with (panel = win.add('panel')) {
         orientation = 'row';
 
         add('statictext', [0, 0, 80, 25], 'Start angle:').justify = 'center';
-        var __startAngleSlider = add('slider', [0, 0, 150, 15], 0, 0, 359),
-            __startAngle = add('edittext', [0, 0, 40, 25], 0);
+        var __startAngleSlider = add('slider', [0, 0, 170, 15], 0, 0, 359),
+            __startAngle = add('edittext', [0, 0, 50, 25], 0);
         __startAngleSlider.onChanging = function (e) { __startAngle.text = Math.round(this.value); normalizeAngle(Math.round(this.value), __startAngle, 1, 360); }
         __startAngleSlider.onChange = function (e) { previewStart(); }
         __startAngle.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, 359); __startAngleSlider.value = Math.round(this.text); });
@@ -183,8 +208,9 @@ with (panel = win.add('panel')) {
         orientation = 'row';
 
         var __isEndAngle = add('checkbox', [0, 0, 80, 25], 'End angle:'),
-            __endAngleSlider = add('slider', [0, 0, 150, 15], 360, 1, 360),
-            __endAngle = add('edittext', [0, 0, 40, 25], 360);
+            __endAngleSlider = add('slider', [0, 0, 170, 15], 360, 1, 360),
+            __endAngle = add('edittext', [0, 0, 50, 25], 360);
+        __isEndAngle.alignment = 'bottom';
         __endAngleSlider.onChanging = function (e) { __endAngle.text = Math.round(this.value); normalizeAngle(Math.round(this.value), __endAngle, 1, 360); }
         __endAngleSlider.onChange = function (e) { previewStart(); }
         __endAngle.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 1, 360); __endAngleSlider.value = Math.round(this.text); });
@@ -197,7 +223,7 @@ with (panel = win.add('panel')) {
         orientation = 'row';
 
         var __isRotateItem = add('checkbox', undefined, 'Rotate each items'),
-            __randomRotate = add('checkbox', undefined, 'Random R each items');
+            __randomRotate = add('checkbox', undefined, 'Rotate each items Random');
 
         __isRotateItem.onClick = function () {
             __randomRotate.enabled = this.value;
@@ -207,8 +233,8 @@ with (panel = win.add('panel')) {
         __randomRotate.onClick = function () { __rotateItemSlider.enabled = __rotateItemAngle.enabled = !this.value; previewStart(); }
     }
     with (add('group')) {
-        var __rotateItemSlider = add('slider', [0, 0, 240, 15], 360, 0, 360),
-            __rotateItemAngle = add('edittext', [0, 0, 40, 25], 360);
+        var __rotateItemSlider = add('slider', [0, 0, 260, 15], 360, 0, 360),
+            __rotateItemAngle = add('edittext', [0, 0, 50, 25], 360);
 
         __rotateItemSlider.onChanging = function (e) { __rotateItemAngle.text = Math.round(this.value); normalizeAngle(Math.round(this.value), __rotateItemAngle, 0, 360); }
         __rotateItemSlider.onChange = function (e) { previewStart(); }
@@ -216,13 +242,12 @@ with (panel = win.add('panel')) {
         __rotateItemAngle.addEventListener('keyup', function (e) { previewStart(); });
         __rotateItemSlider.enabled = __rotateItemAngle.enabled = false;
     }
-
     with (add('group')) {
         orientation = 'row';
         alignChildren = ['fill', 'fill'];
 
         add('statictext', undefined, 'Offset:');
-        var __offset = add('edittext', [0, 0, 80, 25], '0 px'),
+        var __offset = add('edittext', [0, 0, 100, 25], '0 px'),
             __direction = add('dropdownlist', undefined, 'Direction: Up,Direction: Right,Direction: Down,Direction: Left'.split(','));
         __direction.selection = 0;
         __offset.addEventListener('keydown', function (e) { inputNumberEvents(e, this, -Infinity, Infinity); });
@@ -233,10 +258,39 @@ with (panel = win.add('panel')) {
         orientation = 'row';
         alignChildren = ['fill', 'fill'];
 
-        var __pos = add('dropdownlist', [0, 0, 90, 25], 'Position: Absolute,Position: Relative'.split(','));
+        // add('statictext', undefined, 'Offset:');
+        var __randomOffset = add('checkbox', undefined, 'Random offset');
+        __randomOffset.alignment = 'bottom';
+        add('statictext', undefined, 'Min:');
+        var __offsetMin = add('edittext', [0, 0, 60, 25], '0 px');
+        add('statictext', undefined, 'Max:');
+        var __offsetMax = add('edittext', [0, 0, 60, 25], '0 px');
+
+        __offsetMin.enabled = __offsetMax.enabled = __randomOffset.value;
+
+        __randomOffset.onClick = function () {
+            __offsetMin.enabled = __offsetMax.enabled = this.value;
+            __offset.enabled = !this.value;
+            previewStart();
+        }
+        __offsetMin.addEventListener('keydown', function (e) { inputNumberEvents(e, __offsetMin, 0, Infinity, normalizeOffset); });
+        __offsetMin.addEventListener('change', function (e) { normalizeOffset($.convertUnits(this.text, 'px'), __offsetMin, 0, Infinity); });
+        __offsetMin.addEventListener('keyup', function (e) { previewStart(); });
+        __offsetMax.addEventListener('keydown', function (e) { inputNumberEvents(e, __offsetMax, 0, Infinity, normalizeOffset); });
+        __offsetMax.addEventListener('change', function (e) { normalizeOffset($.convertUnits(this.text, 'px'), __offsetMax, 0, Infinity); });
+        __offsetMax.addEventListener('keyup', function (e) { previewStart(); });
+    }
+
+    __offset.enabled = !__randomOffset.value;
+
+    with (add('group')) {
+        orientation = 'row';
+        alignChildren = ['fill', 'fill'];
+
+        var __pos = add('dropdownlist', [0, 0, 105, 25], 'Position: Absolute,Position: Relative'.split(','));
         __pos.selection = 1;
         __pos.onChange = function () { previewStart(); }
-        var __bounds = add('dropdownlist', [0, 0, 90, 25], 'Bounds: Geometric,Bounds: Visible'.split(','));
+        var __bounds = add('dropdownlist', [0, 0, 105, 25], 'Bounds: Geometric,Bounds: Visible'.split(','));
         __bounds.selection = 0;
         __bounds.onChange = function () { previewStart(); }
     }
@@ -255,7 +309,7 @@ with (panel = win.add('panel')) {
 
         var __copiesEnabled = add('checkbox', undefined, 'Copies enabled');
         __copiesEnabled.onClick = function () { __copies.enabled = this.value; previewStart(); }
-        var __copies = add('edittext', [0, 0, 170, 25], 1);
+        var __copies = add('edittext', [0, 0, 200, 25], 1);
         __copies.enabled = false;
         __copies.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 1, Infinity); this.text = parseInt(this.text); });
         __copies.addEventListener('keyup', function (e) { previewStart(); });
@@ -301,6 +355,9 @@ function getData() {
         counterclockwise: __counterClockwise.value,
         isRotateItem: __isRotateItem.value,
         rotateItemAngle: __rotateItemSlider.value,
+        offsetRandom: __randomOffset.value,
+        offsetMin: __offsetMin.text,
+        offsetMax: __offsetMax.text,
     };
 }
 
@@ -331,7 +388,7 @@ win.onClose = function () {
         isUndo = false;
     }
 
-    selection = $items;
+    // selection = $items;
     saveSettings();
     return true;
 }
@@ -356,7 +413,10 @@ function saveSettings() {
             __isRotateItem.value,
             __rotateItemSlider.value,
             __rotateItemAngle.text,
-            __randomRotate.value
+            __randomRotate.value,
+            __randomOffset.value,
+            __offsetMin.text,
+            __offsetMax.text
         ].toString();
 
     $file.open('w');
@@ -389,11 +449,17 @@ function loadSettings() {
             __rotateItemSlider.value = parseInt($main[14]);
             __rotateItemAngle.text = $main[15];
             __randomRotate.value = ($main[16] === 'true');
+            if ($main[17]) __randomOffset.value = ($main[17] === 'true');
+            if ($main[18]) __offsetMin.text = $main[18];
+            if ($main[19]) __offsetMax.text = $main[19];
 
             __copies.enabled = __copiesEnabled.value;
             __endAngleSlider.enabled = __endAngle.enabled = __isEndAngle.value;
             __randomRotate.enabled = __isRotateItem.value;
             __rotateItemSlider.enabled = __rotateItemAngle.enabled = (__isRotateItem.value && __randomRotate.value ? false : __isRotateItem.value);
+
+            __offset.enabled = !__randomOffset.value;
+            __offsetMin.enabled = __offsetMax.enabled = __randomOffset.value;
         } catch (e) {}
         $file.close();
     }

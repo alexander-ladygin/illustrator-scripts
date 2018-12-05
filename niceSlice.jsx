@@ -18,7 +18,8 @@ var scriptName = 'NiceSlice',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
-    };
+    },
+    $items = selection;
 
 function ungroup (group) {
     var i = group.pageItems.length;
@@ -36,95 +37,53 @@ function getPosAnchors (anchors, xORy) {
 
 function niceSlice (item, userOptions) {
     var options = {
-        orientation: 'y',
         fragments:    10,
-        rotate:       45,
-        gutter:       5
+        rotate:       20,
+        offsetX:      0,
+        offsetY:      20,
+        gutter:       5,
+        randomWidth:  80,
     }.extend(userOptions || {});
 
     var bnds = item.visibleBounds,
         $w = bnds[2] - bnds[0],
         $h = bnds[1] - bnds[3],
-        isOX = (options.orientation === 'x');
-    var checkSizeRect = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
+        checkSizeRect = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
 
     checkSizeRect.rotate(options.rotate);
+    $w = checkSizeRect.visibleBounds[2] - checkSizeRect.visibleBounds[0];
+    $h = checkSizeRect.visibleBounds[1] - checkSizeRect.visibleBounds[3];
+    checkSizeRect.remove();
 
-    var pointsX = getPosAnchors(checkSizeRect.pathPoints, 0).sort(function (a, b) { return a > b; }),
-        pointsY = getPosAnchors(checkSizeRect.pathPoints, 1).sort(function (a, b) { return a < b; });
-
-    var __extraSize = {
-            w: (item.width <= item.height && isOX ? pointsX[2] - pointsX[0] : 0),
-            h: (item.width >= item.height && !isOX ? pointsY[0] - pointsY[2] : 0),
-            // w: 0,
-            // h: 0,
-        };
-
-    if (__extraSize.w < 0) __extraSize.w *= -1;
-    if (__extraSize.h < 0) __extraSize.h *= -1;
-    // // __extraSize.w /= 1.5;
-    // // __extraSize.h /= 1.3;
-    // if (isOX) __extraSize.w -= options.gutter;
-    // if (!isOX) __extraSize.h += options.gutter;
-    // checkSizeRect.remove();
-
-    alert(__extraSize.w + '\n' + __extraSize.h);
-
-    var __adv = 1,
-        __w = $w / (isOX ? options.fragments : 1) - (isOX ? options.gutter : 0) + (isOX ? options.gutter / options.fragments : 0),
-        __h = $h / (!isOX ? options.fragments : 1) - (!isOX ? options.gutter : 0) + (!isOX ? options.gutter / options.fragments : 0),
-        // __w = $w * (!isOX ? __adv : 1) / (isOX ? options.fragments : 1) - (isOX ? options.gutter : 0) + (isOX ? options.gutter / options.fragments : 0),
-        // __h = $h * (isOX ? __adv : 1) / (!isOX ? options.fragments : 1) - (!isOX ? options.gutter : 0) + (!isOX ? options.gutter / options.fragments : 0),
-        // __t = bnds[1] + (isOX ? ($h * __adv - $h) / 2 : 0) + (!isOX ?  + (__h + options.gutter) * 2 : 0),
-        // __l = bnds[0] - (!isOX ? (($w * __adv - $w) / 2) : 0) - (isOX ? (__w + options.gutter) * 2 : 0),
-        __t = bnds[1],
-        __l = bnds[0],
-        // __t = bnds[1] + (isOX ? (__h - $h) / 2 : 0),
-        // __l = bnds[0] - (!isOX ? (__w * $w) / 2 : 0),
+    var __w = $w / options.fragments - options.gutter + options.gutter / options.fragments,
+        __h = $h,
+        __t = bnds[1] + ($h - (bnds[1] - bnds[3])) / 2,
+        __l = bnds[0] - ($w - (bnds[2] - bnds[0])) / 2,
         fragments = [],
-        rectgls = [],
         node, group;
 
     selection = null;
 
-    group = item.parent.groupItems.add();
-    for (var i = 0; i < options.fragments; i++) {
-        // var pt = item.parent.pathItems.rectangle(__t - (!isOX ? (__h + options.gutter) * i : 0), __l + (isOX ? (__w + options.gutter) * i : 0), __w, __h);
-        // pt.rotate(options.rotate, false, true, true, true);
-        rectgls.push(group.pathItems.rectangle(__t - (!isOX ? (__h + options.gutter) * i : 0), __l + (isOX ? (__w + options.gutter) * i : 0), __w, __h));
-    }
-    group.rotate(options.rotate);
-    ungroup(group);
-    // var cmask = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
-    // cmask.moveToBeginning(group);
-    // group.clipped = true;
-    // cmask.clipping = true;
-    // // return; 
-    // group.selected = true;
-    // app.executeMenuCommand('Live Pathfinder Merge');
-    // app.executeMenuCommand('expandStyle');
-    // ungroup(selection[0]);
-    // rectgls = selection;
-    // selection = null;
-    // return;
+    var gGroup = item.parent.groupItems.add();
+    gGroup.move(item, ElementPlacement.PLACEBEFORE);
 
     for (var i = 0; i < options.fragments; i++) {
-        selection = null;
-        group = item.parent.groupItems.add();
-        group.move(item, ElementPlacement.PLACEBEFORE);
+        group = gGroup.groupItems.add();
 
-        node = item.duplicate();
-        node.moveToBeginning(group);
-        rectgls[i].moveToBeginning(group);
-
+        node = group.pathItems.rectangle(__t, __l + ((__w + options.gutter) * i), __w, __h);
         fragments.push(group);
+    }
+    gGroup.rotate(options.rotate);
+    ungroup(gGroup);
 
-        group.clipped = true;
-        rectgls[i].clipping = true;
+    for (var i = 0; i < options.fragments; i++) {
 
-        // group.selected = true;
-        // app.executeMenuCommand('Live Pathfinder Merge');
-        // app.executeMenuCommand('expandStyle');
+        item.duplicate().move(fragments[i], ElementPlacement.PLACEATEND);
+        fragments[i].clipped = true;
+        fragments[i].pageItems[0].clipping = true;
+
+        fragments[i].top -= options.offsetY * (i % 2 === 0 ? -1 : 1);
+        fragments[i].left += options.offsetX * (i % 2 === 0 ? -1 : 1);
     }
 
     item.remove();
@@ -133,4 +92,20 @@ function niceSlice (item, userOptions) {
 }
 
 
-var fg = niceSlice(selection[0]);
+var win = new Window('dialog', scriptName + copyright);
+
+with (win.add('panel')) {
+    with (add('group')) {
+        orientation = 'row';
+        alignChildren = 'fill';
+
+        add('statictext', undefined, 'Fragments:');
+        var __fragmentsSlider = add('slider', undefined, 10, 1, 20);
+        __fragmentsSlider.maximumSize = [1000, 15];
+        var __fragments = add('edittext', [0, 0, 50, 25], '10');
+    }
+}
+
+selection = null;
+win.center();
+win.show();

@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 
   Author: Alexander Ladygin (i@ladygin.pro)
   Program version: Adobe Illustrator CC+ (presumably in Adobe Illustrator CS6 - did not test)

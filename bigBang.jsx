@@ -25,6 +25,9 @@ var scriptName = 'bigBang',
     isUndo = false,
     $count = selection.length;
 
+function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
+}
 
 function bigBang (items, userOptions) {
     try {
@@ -37,10 +40,9 @@ function bigBang (items, userOptions) {
 
     options.offset = $.convertUnits(options.offset, 'px');
 
-    var delta = options.delta / 100,
+    var delta = options.delta / 100 * (options.delta < 100 ? -1 : 1),
         BNDS = 'geometricBounds',
         gbnds = (options.isKeyObject ? selection[options.keyObject][BNDS] : $.getBounds(selection, BNDS)),
-    // var gbnds = $.getBounds(selection),
         x1 = gbnds[0] + (gbnds[2] - gbnds[0]) / 2,
         y1 = gbnds[1] - (gbnds[1] - gbnds[3]) / 2;
 
@@ -54,12 +56,15 @@ function bigBang (items, userOptions) {
             x2 = ibnds[0] + $w,
             y2 = ibnds[1] - $h,
             u = Math.atan2(y1 - y2, x1 - x2),
-            d = (Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2)) + options.offset) * delta;
+            d = (Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2)));
+
+        // if (delta) d *= delta;
+        d += options.offset;
 
         var cos = Math.cos(u) * d,
             sin = Math.sin(u) * d,
-            x3 = x1 + (cos < 0 ? cos * -1 : cos) * (x2 > x1 ? 1 : -1),
-            y3 = y1 + (sin > 0 ? sin * -1 : sin) * (y2 > y1 ? -1 : 1);
+            x3 = x1 + (cos < 0 ? cos * -1 : cos) * (x2 > x1 ? 1 : -1) * delta,
+            y3 = y1 + (sin > 0 ? sin * -1 : sin) * (y2 > y1 ? -1 : 1) * delta;
 
         item.position = [x3 - $w, y3 + $h];
     }
@@ -109,7 +114,6 @@ with (panel = win.add('panel', undefined, 'Offset')) {
     with (add('group')) {
         orientation = 'row';
 
-        // add('statictext', [0, 0, 80, 25], 'Offset:').justify = 'center';
         var __offsetSlider = add('slider', [0, 0, 250, 15], 0, -300, 300),
             __offset = add('edittext', [0, 0, 50, 25], '0 px');
         __offsetSlider.onChanging = function (e) {
@@ -117,8 +121,8 @@ with (panel = win.add('panel', undefined, 'Offset')) {
             __offset.text = Math.round(this.value) + (units ? ' ' + units : '');
         }
         __offsetSlider.onChange = function (e) { previewStart(); }
-        __offset.addEventListener('keydown', function (e) { inputNumberEvents(e, this, Infinity, Infinity); __offsetSlider.value = Math.round(this.text); });
-        __offset.addEventListener('keyup', function (e) { previewStart(); });
+        __offset.addEventListener('keydown', function (e) { inputNumberEvents(e, this, -Infinity, Infinity); if (this.text === 'Infinity') { this.text = 0; } });
+        __offset.addEventListener('keyup', function (e) { __offsetSlider.value = Math.round(this.text); previewStart(); });
     }
     with (add('group')) {
         orientation = 'row';
@@ -136,12 +140,12 @@ with (panel = win.add('panel', undefined, 'Offset')) {
         orientation = 'row';
 
         add('statictext', undefined, 'Delta:');
-        var __deltaSlider = add('slider', [0, 0, 180, 15], 0, -100, 100),
+        var __deltaSlider = add('slider', [0, 0, 180, 15], 100, 0, 200),
             __delta = add('edittext', [0, 0, 50, 25], 0);
         __deltaSlider.onChanging = function (e) { __delta.text = Math.round(this.value) }
         __deltaSlider.onChange = function (e) { previewStart(); }
-        __delta.addEventListener('keydown', function (e) { inputNumberEvents(e, this, Infinity, Infinity); __deltaSlider.value = Math.round(this.text); });
-        __delta.addEventListener('keyup', function (e) { previewStart(); });
+        __delta.addEventListener('keydown', function (e) { inputNumberEvents(e, this, -Infinity, Infinity); if (this.text === 'Infinity') this.text = __deltaSlider.text = 0; });
+        __delta.addEventListener('keyup', function (e) { __deltaSlider.value = Math.round(this.text); previewStart(); });
     }
 }
 with (win.add('group')) {
@@ -160,7 +164,7 @@ with (win.add('group')) {
             win.close();
         }
             else {
-                app.undo();
+                if (isUndo) app.undo();
                 startAction();
                 isUndo = false;
                 win.close();
@@ -171,7 +175,7 @@ with (win.add('group')) {
 function getData() {
     return {
         offset: __offset.text,
-        delta: parseFloat(__delta.value),
+        delta: parseFloat(__delta.text),
         isKeyObject: __isKeyObject.value,
         keyObject: Math.round(__keyObject.value) - 1,
     };
@@ -234,9 +238,9 @@ function loadSettings() {
                 $main = data[0].split(',');
             __offsetSlider.value = parseInt($main[0]);
             __offset.text = $main[1];
-            __isKeyObject.value = ($main[3] === 'true');
-            __deltaSlider.value = parseInt($main[4]);
-            __delta.text = $main[5];
+            __isKeyObject.value = ($main[2] === 'true');
+            __deltaSlider.value = parseInt($main[3]);
+            __delta.text = $main[4];
 
             __keyObject.enabled = __keyObjectTitle.enabled = __isKeyObject.value;
         } catch (e) {}

@@ -62,12 +62,30 @@ function getPosAnchors (anchors, xORy) {
     return arr;
 }
 
+function rvbn (min, max) {
+    // random value between numbers 
+    return min + Math.floor(Math.random() * (max - min));
+}
+
+Array.prototype.randomArray = function() {
+    var ix = this.length, ti, $i;
+    while (0 !== ix) {
+        $i = Math.floor(Math.random() * ix);
+        ix -= 1; ti = this[ix];
+        this[ix] = this[$i];
+        this[$i] = ti;
+    }
+    return this;
+}
+
 function niceSlice (items, userOptions) {
     var options = {
-        fragments: {
-            number:   10,
-            width:    100, // %, width in percent
-        },
+        fragments:    10,
+        width:        'random',
+        /*
+            auto
+            random
+        */
         rotate:       0,
         offsetX:      10, // % of width
         offsetY:      10, // % of height
@@ -81,11 +99,21 @@ function niceSlice (items, userOptions) {
 
     options.fragments = (options.fragments > 0 ? options.fragments : 1) + 1;
 
+    function randomWidth (maxsize) {
+        var arr = [];
+        for (var i = 0, j = options.fragments; i < options.fragments; i++, j--) {
+            arr.push(rvbn(2, maxsize / 5));
+            maxsize -= arr[i];
+        }
+        return arr;
+    }
+
     function process (item) {
         var gutter = options.gutter,
             bnds = item.visibleBounds,
             $w = bnds[2] - bnds[0],
-            $h = bnds[1] - bnds[3];
+            $h = bnds[1] - bnds[3],
+            isRW = (options.width === 'random');
 
         if (options.container === 'circle') {
             var checkSizeRect = item.parent.pathItems.rectangle(bnds[1], bnds[0], $w, $h);
@@ -109,12 +137,24 @@ function niceSlice (items, userOptions) {
         gGroup.move(item, ElementPlacement.PLACEBEFORE);
         try {
 
+        if (isRW) {
+            var $rWidth = randomWidth(__w * options.fragments),
+                $l = 0;
+        }
+
         for (var i = 0; i < options.fragments; i++) {
             evenOdd = (i % 2 === 0 ? -1 : 1);
+            if (isRW) {
+                __w = $rWidth[i] + gutter;
+            }
+                else {
+                    __w = ((__w + gutter) * i);
+                }
             group = gGroup.groupItems.add();
 
             // create slice item
-            rect = group.pathItems.rectangle(__t - (options.offsetY / 100 * $h * evenOdd), __l + ((__w + gutter) * i) + (options.offsetX / 100 * $w * evenOdd), __w, __h);
+            rect = group.pathItems.rectangle(__t - (options.offsetY / 100 * $h * evenOdd), __l + $l + (options.offsetX / 100 * $w * evenOdd), __w, __h);
+            if (isRW) $l += __w + gutter;
 
             // item
             node = item.duplicate();

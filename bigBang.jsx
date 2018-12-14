@@ -40,7 +40,7 @@ function bigBang (items, userOptions) {
 
     options.offset = $.convertUnits(options.offset, 'px');
 
-    var delta = options.delta / 100 * (options.delta < 100 ? -1 : 1),
+    var delta = (options.delta > 0 ? 1 : 0) + options.delta / 100,
         BNDS = 'geometricBounds',
         gbnds = (options.isKeyObject ? selection[options.keyObject][BNDS] : $.getBounds(selection, BNDS)),
         x1 = gbnds[0] + (gbnds[2] - gbnds[0]) / 2,
@@ -56,15 +56,14 @@ function bigBang (items, userOptions) {
             x2 = ibnds[0] + $w,
             y2 = ibnds[1] - $h,
             u = Math.atan2(y1 - y2, x1 - x2),
-            d = (Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2)));
+            d = (Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2))) + options.offset;
 
-        // if (delta) d *= delta;
-        d += options.offset;
+        if (delta) d *= delta;
 
         var cos = Math.cos(u) * d,
             sin = Math.sin(u) * d,
-            x3 = x1 + (cos < 0 ? cos * -1 : cos) * (x2 > x1 ? 1 : -1) * delta,
-            y3 = y1 + (sin > 0 ? sin * -1 : sin) * (y2 > y1 ? -1 : 1) * delta;
+            x3 = x1 + (cos < 0 ? cos * -1 : cos) * (x2 > x1 ? 1 : -1),
+            y3 = y1 + (sin > 0 ? sin * -1 : sin) * (y2 > y1 ? -1 : 1);
 
         item.position = [x3 - $w, y3 + $h];
     }
@@ -108,6 +107,9 @@ function inputNumberEvents (ev, _input, min, max, callback){
 }
 
 var win = new Window('dialog', scriptName + copyright);
+
+win.alignChildren = ['fill', 'fill'];
+
 with (panel = win.add('panel', undefined, 'Offset')) {
     alignChildren = ['fill', 'bottom'];
 
@@ -140,7 +142,7 @@ with (panel = win.add('panel', undefined, 'Offset')) {
         orientation = 'row';
 
         add('statictext', undefined, 'Delta:');
-        var __deltaSlider = add('slider', [0, 0, 180, 15], 100, 0, 200),
+        var __deltaSlider = add('slider', [0, 0, 204, 15], 0, -100, 100),
             __delta = add('edittext', [0, 0, 50, 25], 0);
         __deltaSlider.onChanging = function (e) { __delta.text = Math.round(this.value) }
         __deltaSlider.onChange = function (e) { previewStart(); }

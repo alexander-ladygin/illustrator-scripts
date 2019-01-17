@@ -19,40 +19,48 @@ var win = new Window('dialog', scriptName + ' \u00A9 www.ladygin.pro');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 
-var panel = win.add('panel', undefined, 'What to replace?');
-    panel.orientation = 'column';
-    panel.alignChildren = ['fill', 'fill'];
-    panel.margins = [20, 30, 20, 20];
+with (win.add('group')) {
+    orientation = 'row';
 
-    var bufferRadio = panel.add('radiobutton', undefined, 'Object in buffer'),
-        currentRadio = panel.add('radiobutton', undefined, 'Top object'),
-        randomRadio = panel.add('radiobutton', undefined, 'All in group (random)'),
-        groupValue = panel.add('group'),
-        randomValue = groupValue.add('edittext', undefined, '100'),
-        randomValueUnit = groupValue.add('statictext', undefined, '%'),
-        elementsInGroupCheckbox = panel.add('checkbox', undefined, 'Replace items in a group?');
+    var panel = add('panel', undefined, 'What to replace?');
+        panel.orientation = 'column';
+        panel.alignChildren = ['fill', 'fill'];
+        panel.margins = [20, 30, 20, 20];
 
-    groupValue.orientation = 'row';
-    groupValue.margins = 0;
-    groupValue.alignChildren = ['fill', 'fill'];
-    randomValue.minimumSize = [120, undefined];
+        var bufferRadio = panel.add('radiobutton', undefined, 'Object in buffer'),
+            currentRadio = panel.add('radiobutton', undefined, 'Top object'),
+            groupSuccessively = panel.add('radiobutton', undefined, 'All in group (successively)'),
+            randomRadio = panel.add('radiobutton', undefined, 'All in group (random)'),
+            groupValue = panel.add('group'),
+            randomValue = groupValue.add('edittext', undefined, '100'),
+            randomValueUnit = groupValue.add('statictext', undefined, '%'),
+            elementsInGroupCheckbox = panel.add('checkbox', undefined, 'Replace items in a group?');
 
-var panelCheckboxes = win.add('panel');
-    panelCheckboxes.orientation = 'column';
-    panelCheckboxes.alignChildren = ['fill', 'fill'];
-    panelCheckboxes.margins = 20;
+        groupValue.orientation = 'row';
+        groupValue.margins = 0;
+        groupValue.alignChildren = ['fill', 'fill'];
+        randomValue.minimumSize = [140, undefined];
 
-    var copyWHCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy Width & Height'),
-        saveOriginalCheckbox = panelCheckboxes.add('checkbox', undefined, 'Save original element'),
-        copyColorsCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy colors from element'),
-        randomRotateCheckbox = panelCheckboxes.add('checkbox', undefined, 'Random element rotation'),
-        symbolByRPCheckbox = panelCheckboxes.add('checkbox', [0, 0, 100, 40], 'Align symbols by\nregistration point');
+    var panelCheckboxes = add('panel');
+        panelCheckboxes.orientation = 'column';
+        panelCheckboxes.alignChildren = ['fill', 'fill'];
+        panelCheckboxes.margins = 20;
 
-    bufferRadio.value = true;
-    copyWHCheckbox.value = false;
-    saveOriginalCheckbox.value = false;
+        var fitInSizeCheckbox = panelCheckboxes.add('checkbox', undefined, 'Fit to element size');
+            copyWHCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy Width & Height');
+            saveOriginalCheckbox = panelCheckboxes.add('checkbox', undefined, 'Save original element'),
+            copyColorsCheckbox = panelCheckboxes.add('checkbox', undefined, 'Copy colors from element'),
+            randomRotateCheckbox = panelCheckboxes.add('checkbox', undefined, 'Random element rotation'),
+            symbolByRPCheckbox = panelCheckboxes.add('checkbox', [0, 0, 100, 40], 'Align symbols by\nregistration point');
 
-    var winButtons = win.add('group');
+        bufferRadio.value = true;
+        fitInSizeCheckbox.value = false;
+        copyWHCheckbox.value = false;
+        saveOriginalCheckbox.value = false;
+
+}
+
+var winButtons = win.add('group');
     winButtons.alignChildren = ['fill', 'fill'];
     winButtons.margins = [0, 0, 0, 0];
 
@@ -73,6 +81,11 @@ var panelCheckboxes = win.add('panel');
 
     copyWHCheckbox.onClick = function (e) {
         groupValue.enabled = !copyWHCheckbox.value;
+        fitInSizeCheckbox.enabled = !this.value;
+    }
+
+    fitInSizeCheckbox.onClick = function (e) {
+        copyWHCheckbox.enabled = !this.value;
     }
 
 function randomRotation (item) {
@@ -107,7 +120,8 @@ function startAction() {
             items = (!elementsInGroupCheckbox.value ? selection : selection[selection.length - 1].pageItems),
             nodes = (currentRadio.value ? selection[0] : (bufferRadio.value ? [] : selection[0].pageItems)),
             length = nodes.length,
-            i = items.length;
+            i = items.length,
+            j = 0;
 
         progressBarCounter = progressBar.maxvalue / i;
 
@@ -118,16 +132,19 @@ function startAction() {
             selection = null;
         }
 
-        function getNode() {
-            return ((currentRadio.value || bufferRadio.value) ? nodes : nodes[ Math.floor(Math.random() * length) ]);
+        function getNode (__index) {
+            return ((currentRadio.value || bufferRadio.value) ? nodes : nodes[ typeof __index === 'number' ? __index : Math.floor(Math.random() * length) ]);
         }
 
         while (i--) {
             if (!bufferRadio.value && !i) break;
+            if (j >= nodes.length) j = 0;
             var item = items[i],
-                node = getNode().duplicate(item, ElementPlacement.PLACEBEFORE),
+                node = getNode(groupSuccessively.value ? j : undefined).duplicate(item, ElementPlacement.PLACEBEFORE),
                 __fn = 'height',
                 __fnReverse = 'width';
+
+            j++;
 
             if (node.height >= node.width) {
                 __fn = 'width';
@@ -140,8 +157,10 @@ function startAction() {
                 var __size = (item.height >= item.width ? item.width : item.height) * __ratio,
                     precent = __size * 100 / node[__fn] / 100;
 
-                node[__fn] = __size;
-                node[__fnReverse] *= precent;
+                if (fitInSizeCheckbox.value) {
+                    node[__fn] = __size;
+                    node[__fnReverse] *= precent;
+                }
             }
                 else {
                     node.width = item.width;
@@ -183,7 +202,9 @@ function saveSettings() {
             copyColorsCheckbox.value,
             randomRotateCheckbox.value,
             symbolByRPCheckbox.value,
-            randomValue.text
+            randomValue.text,
+            groupSuccessively.value,
+            fitInSizeCheckbox.value
         ].toString();
 
     $file.open('w');
@@ -208,8 +229,12 @@ function loadSettings() {
                 randomRotateCheckbox.value = ($main[7] === 'true');
                 symbolByRPCheckbox.value = ($main[8] === 'true');
                 randomValue.text = $main[9];
+                groupSuccessively.value = ($main[10] === 'true');
+                fitInSizeCheckbox.value = ($main[11] === 'true');
 
                 groupValue.enabled = !copyWHCheckbox.value;
+                fitInSizeCheckbox.enabled = !copyWHCheckbox.value;
+                copyWHCheckbox.enabled = !fitInSizeCheckbox.value;
         } catch (e) {}
         $file.close();
     }

@@ -93,17 +93,28 @@ function randomRotation (item) {
 }
 
 function setFillColor (items, color) {
-    var i = items.length;
-    if (i) while (i--) {
-        if (items[i].typename === 'GroupItem') {
-            setFillColor(items[i].pageItems, color);
+    if (color) {
+        var i = items.length;
+        if (i) while (i--) {
+            if (items[i].typename === 'GroupItem') {
+                setFillColor(items[i].pageItems, color);
+            }
+                else if (items[i].typename === 'CompoundPathItem') {
+                    if (items[i].pathItems.length) items[i].pathItems[0].fillColor = color;
+                }
+                else if (items[i].typename === 'PathItem') {
+                    items[i].fillColor = color;
+                }
         }
-            else if (items[i].typename === 'CompoundPathItem') {
-                if (items[i].pathItems.length) items[i].pathItems[0].fillColor = color;
-            }
-            else if (items[i].typename === 'PathItem') {
-                items[i].fillColor = color;
-            }
+    }
+}
+
+function getFillColor (items) {
+    var i = items.length, gc;
+    if (i) while (i--) {
+        if (items[i].typename === 'GroupItem' && (gc = getFillColor(items[i].pageItems))) return gc;
+            else if (items[i].typename === 'CompoundPathItem' && items[i].pathItems.length) return items[i].pathItems[0].fillColor;
+            else if (items[i].typename === 'PathItem') return items[i].fillColor;
     }
 }
 
@@ -191,7 +202,11 @@ function startAction() {
                 node.top += (item.top - item.height / 2) - __pos[1];
             }
 
-            if (copyColorsCheckbox.value && item.fillColor) setFillColor([node], item.fillColor);
+            if (copyColorsCheckbox.value) {
+                try {
+                setFillColor([node], getFillColor([item]));
+                }catch(e){alert(e+'\n'+e.line)}
+            }
             if (!saveOriginalCheckbox.value) item.remove();
 
             progressBar.value += progressBarCounter;

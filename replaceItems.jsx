@@ -92,6 +92,21 @@ function randomRotation (item) {
     item.rotate(Math.floor(Math.random() * 360), true, true, true, true, Transformation.CENTER);
 }
 
+function setFillColor (items, color) {
+    var i = items.length;
+    if (i) while (i--) {
+        if (items[i].typename === 'GroupItem') {
+            setFillColor(items[i].pageItems, color);
+        }
+            else if (items[i].typename === 'CompoundPathItem') {
+                if (items[i].pathItems.length) items[i].pathItems[0].fillColor = color;
+            }
+            else if (items[i].typename === 'PathItem') {
+                items[i].fillColor = color;
+            }
+    }
+}
+
 function getSymbolPositionByRegistrationPoint (item) {
     var bakupSymbol = item.symbol,
         newSymbol = activeDocument.symbols.add(item, SymbolRegistrationPoint.SYMBOLTOPLEFTPOINT);
@@ -176,7 +191,7 @@ function startAction() {
                 node.top += (item.top - item.height / 2) - __pos[1];
             }
 
-            if (copyColorsCheckbox.value && item.fillColor) node.fill(item.fillColor);
+            if (copyColorsCheckbox.value && item.fillColor) setFillColor([node], item.fillColor);
             if (!saveOriginalCheckbox.value) item.remove();
 
             progressBar.value += progressBarCounter;

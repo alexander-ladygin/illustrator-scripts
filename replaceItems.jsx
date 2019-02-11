@@ -161,7 +161,7 @@ function startAction() {
 
             j++;
 
-            if (node.height >= node.width) {
+            if (node.height <= node.width) {
                 __fn = 'width';
                 __fnReverse = 'height';
             }

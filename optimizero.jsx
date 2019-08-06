@@ -27,22 +27,26 @@ Array.prototype.__remove = function(){var i = this.length; if (i > 0) while (i--
 
 function optimizero (userOptions) {
     var options = {
-        hidden:                true,
-        ghost:                 true,
-        rasterEmbed:           true,
-        expandStyle:           true,
-        removeEmptyLayers:     true,
-        locked:                'unlock',
+        hidden:                false,
+        ghost:                 false,
+        rasterEmbed:           false,
+        symbolBreakLink:       false,
+        expandStyle:           false,
+        removeEmptyLayers:     false,
+        compoundFix:           false,
+        locked:                'skip',
         /*
+            skip
             unlock
             remove
         */
-        guides:                'newlayer',
+        guides:                'skip',
         /*
+            skip
             newlayer
             remove
         */
-        openPaths:             'join',
+        openPaths:             'skip',
         /*
             skip
             join
@@ -50,10 +54,13 @@ function optimizero (userOptions) {
         */
     }.extend(userOptions || {});
 
-    var layerGuides = activeDocument.layers.add(),
-        guidesCollection = [];
-    layerGuides.name = scriptName + '_guides';
     options.guides = (typeof options.guides === 'string' ? options.guides.toLowerCase() : 'newlayer');
+
+    if (options.guides !== 'skip') {
+        var layerGuides = activeDocument.layers.add(),
+            guidesCollection = [];
+        layerGuides.name = scriptName + '_guides';
+    }
 
     function compoundFixAction ($items) {
         function __ungroup (__items) {
@@ -96,7 +103,7 @@ function optimizero (userOptions) {
                 layers[n].remove();
                 continue;
             }
-                else if (options.locked && layers[n].locked) {
+                else if (options.locked !== 'skip' && layers[n].locked) {
                     layers[n].locked = false;
                     if (!(options.locked !== 'remove')) {
                         layers[n].remove();
@@ -112,19 +119,16 @@ function optimizero (userOptions) {
             if (!$progress) progressBarCounter = progressBar.maxvalue * 0.8 / i;
 
             while (i--) {
-                if (options.guides && items[i].guides) {
+                if (options.guides !== 'skip' && items[i].guides) {
                     guidesCollection.push(items[i]);
                 }
                     else if (options.hidden && items[i].hidden) {
                         items[i].hidden = true;
                         items[i].remove();
                     }
-                    else if (options.locked && items[i].locked) {
+                    else if (options.locked !== 'skip' && items[i].locked) {
                         if (options.locked !== 'remove') items[i].locked = false;
                             else items[i].remove();
-                    }
-                    else if (items[i].typename === 'SymbolItem') {
-                        items[i].breakLink();
                     }
                     else if (options.ghost && items[i].typename.indexOf('PathItem') > -1) {
                         try {
@@ -142,9 +146,6 @@ function optimizero (userOptions) {
                                 }
                         }catch (e) {}
                     }
-                    else if (options.rasterEmbed && items[i].typename === 'PlacedItem') {
-                        items[i].embed();
-                    }
                     else if (items[i].typename === 'GroupItems') {
                         itemsOptimize(items[i].pageItems, true);
                     }
@@ -157,15 +158,40 @@ function optimizero (userOptions) {
             }
     }
 
+    function optimizeRasters() {
+        if (options.rasterEmbed) {
+            var i = activeDocument.placedItems.length;
+            if (i > 0) while (i--) {
+                activeDocument.placedItems[i].embed();
+            }
+        }
+    }
+    function optimizeSymbols() {
+        if (options.symbolBreakLink) {
+            var i = activeDocument.symbolItems.length;
+            if (i > 0) while (i--) {
+                activeDocument.symbolItems[i].breakLink();
+            }
+        }
+    }
+
 
     selection = null;
     if (options.expandStyle) $.command('selectall').command('expandStyle');
-    compoundFixAction(activeDocument.compoundPathItems);
+    if (options.compoundFix) compoundFixAction(activeDocument.compoundPathItems);
     selection = null;
-    layersOptimize(activeDocument.layers);
-    itemsOptimize(activeDocument.pageItems);
-    var i = guidesCollection.length;
-    if (i > 0) while (i--) { options.guides !== 'remove' ? guidesCollection[i].moveToBeginning(layerGuides) : guidesCollection[i].remove(); }
+    if (options.locked !== 'skip' || options.hidden) {
+        layersOptimize(activeDocument.layers);
+    }
+    if (options.guides !== 'skip' || options.locked !== 'skip' || options.ghost || options.hidden) {
+        itemsOptimize(activeDocument.pageItems);
+    }
+    optimizeRasters();
+    optimizeSymbols();
+    if (options.guides !== 'skip') {
+        var i = guidesCollection.length;
+        if (i > 0) while (i--) { options.guides !== 'remove' ? guidesCollection[i].moveToBeginning(layerGuides) : guidesCollection[i].remove(); }
+    }
     if (options.emptyLayers) {
         activeDocument.emptyLayers().__remove();
         progressBar.value += progressBar.maxvalue * 0.2;
@@ -190,18 +216,22 @@ with (globalGroup = win.add('group')) {
         checkHidden.value = true;
         var checkGhost = add('checkbox', undefined, 'Remove Ghost items');
         checkGhost.value = true;
+        var checkCompoundFix = add('checkbox', undefined, 'Fix Compound Path Items');
+        checkCompoundFix.value = true;
         var checkRemoveEmptyLayers = add('checkbox', undefined, 'Remove empty layers');
         checkRemoveEmptyLayers.value = true;
         var checkRasterEmbed = add('checkbox', undefined, 'Embed rester items');
         checkRasterEmbed.value = true;
+        var checkSymbolBreakLink = add('checkbox', undefined, 'Symbols break link');
+        checkSymbolBreakLink.value = true;
         var checkExpandStyle = add('checkbox', undefined, 'Expand items (styles)');
         checkExpandStyle.helpTip = 'Expand brushes, symbols, effects ...';
         checkExpandStyle.value = true;
-        var dlistLocked = add('dropdownlist', undefined, 'Locked items: Unlock,Locked items: Remove'.split(','));
+        var dlistLocked = add('dropdownlist', undefined, 'Locked items: Skip,Locked items: Unlock,Locked items: Remove'.split(','));
         dlistLocked.selection = 0;
         var dlistOpenPaths = add('dropdownlist', undefined, 'Open paths: Join,Open paths: Remove,Open paths: Skip'.split(','));
         dlistOpenPaths.selection = 0;
-        var dlistGuides = add('dropdownlist', undefined, 'Guides: Remove,Guides: Move to new layer'.split(','));
+        var dlistGuides = add('dropdownlist', undefined, 'Guides: Skip,Guides: Remove,Guides: Move to new layer'.split(','));
         dlistGuides.selection = 1;
     }
 
@@ -237,7 +267,9 @@ function startAction() {
             hidden: checkHidden.value,
             locked: dlistLocked.selection.text.toLowerCase().replace(/ /g, '').replace('lockeditems:', ''),
             ghost: checkGhost.value,
+            compoundFix: checkCompoundFix.value,
             rasterEmbed: checkRasterEmbed.value,
+            symbolBreakLink: checkSymbolBreakLink.value,
             expandStyle: checkExpandStyle.value,
             guides: dlistGuides.selection.text.toLowerCase().replace(/ /g, '').replace('guides:', ''),
             removeEmptyLayers: checkRemoveEmptyLayers.value,
@@ -262,7 +294,9 @@ function saveSettings() {
             checkRemoveEmptyLayers.value,
             checkRasterEmbed.value,
             checkExpandStyle.value,
-            dlistOpenPaths.selection.index
+            dlistOpenPaths.selection.index,
+            checkCompoundFix.value,
+            checkSymbolBreakLink.value
         ].toString();
 
     $file.open('w');
@@ -285,6 +319,8 @@ function loadSettings() {
                 checkRasterEmbed.value = ($main[5] === 'true');
                 checkExpandStyle.value = ($main[6] === 'true');
                 dlistOpenPaths.selection = parseInt($main[7]);
+                checkCompoundFix.value = ($main[8] === 'true');
+                checkSymbolBreakLink.value = ($main[9] === 'true');
         } catch (e) {}
         $file.close();
     }

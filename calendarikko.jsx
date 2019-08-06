@@ -76,6 +76,7 @@ function calendarikko(userOptions) {
                 yearInMonth: true,
             },
             margin: '0',
+            compact_mode: false,
             fontColor: {
                 body: {
                     type: 'cmyk',
@@ -541,7 +542,7 @@ function calendarikko(userOptions) {
 
     // global
     var frameColumns = 7,
-        frameRows = 5,
+        frameRows = (options.compact_mode ? 5 : 6),
         totalCeils = frameColumns * frameRows;
         daysFormatCorrectHeight = false,
         shapesCreated = false;
@@ -1133,7 +1134,7 @@ function calendarikko(userOptions) {
         setEmptyDays(frame);
 
         // normalize rows, example: 26/31
-        normalizeRows(frame);
+        if (options.compact_mode) normalizeRows(frame);
     }
 
     function createShapes (placement, $props) {
@@ -1875,7 +1876,8 @@ var win = new Window('dialog', scriptName + copyright),
     var winButtons = globalGroup.add('group');
     winButtons.alignChildren = ['fill', 'fill'];
 
-    winButtons.add('statictext', undefined, 'All settings are saved automatically.');
+    var __compactMode = winButtons.add('checkbox', undefined, 'Compact mode:');
+    __compactMode.value = true;
 
     var cancel = winButtons.add('button', undefined, 'Cancel');
     cancel.helpTip = 'Press Esc to Close';
@@ -1915,7 +1917,8 @@ function saveSettings() {
             __standart.selection.index,
             shapesVal.selection.index,
             __createStyle.value,
-            __linksFrames.value
+            __linksFrames.value,
+            __compactMode.value
         ].toString() + '\n' +
         __weekends.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
         winHolidays.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
@@ -1959,6 +1962,7 @@ function loadSettings() {
             shapesVal.selection = parseInt($main[20]);
             __createStyle.value = ($main[21] === 'true');
             __linksFrames.value = ($main[22] === 'true');
+            __compactMode.value = ($main[23] === 'true');
             __weekends.text = $wnds;
             winHolidays.text = $holi;
             $margins = $mrgn;
@@ -1987,6 +1991,7 @@ function getCalendarData() {
         otherDays:      __otherDays.value ? 'fill': 'empty',
         language:       __lang.selection.text.toLowerCase().slice(0,2),
         holidays:       winHolidays.text.replace(/ /g, '').split(','),
+        compact_mode:   __compactMode.value,
         margin:         $margins,
         shapes:         shapesVal.selection.text.toLowerCase().replace(/ /g, '-'),
         standart:       __standart.selection.text === 'European' ? 'eu' : 'us',

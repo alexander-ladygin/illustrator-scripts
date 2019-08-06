@@ -203,9 +203,7 @@ function startAction() {
             }
 
             if (copyColorsCheckbox.value) {
-                try {
                 setFillColor([node], getFillColor([item]));
-                }catch(e){alert(e+'\n'+e.line)}
             }
             if (!saveOriginalCheckbox.value) item.remove();
 

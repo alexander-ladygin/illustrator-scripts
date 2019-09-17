@@ -433,52 +433,52 @@ function calendarikko(userOptions) {
                         'Dicembre'
                     ]
                 },
-                dt: {
+                az: {
                     oneLetter: [
-                        'D',
-                        'M',
-                        'D',
-                        'W',
-                        'D',
-                        'V',
-                        'Z'
+                        'B',
+                        'Ç',
+                        'Ç',
+                        'C',
+                        'C',
+                        'Ş',
+                        'B'
                     ],
                     shortForm: [
-                        'Zo',
-                        'Ma',
-                        'Di',
-                        'Wo',
-                        'Do',
-                        'Vr',
-                        'Za'
+                        'Be',
+                        'Ça',
+                        'Ç',
+                        'Ca',
+                        'C',
+                        'Ş',
+                        'B'
                     ],
                     fullWord: [
-                        'Zondag',
-                        'Maandag',
-                        'Dinsdag',
-                        'Woensdag',
-                        'Donderdag',
-                        'Vrijdag',
-                        'Zaterdag'
+                        'Bazar ertəsi',
+                        'Çərşənbə axşamı ',
+                        'Çərşənbə',
+                        'Cümə axşamı',
+                        'Cümə',
+                        'Şənbə',
+                        'Bazar'
                     ],
                     weeks: {
-                        oneLetter: 'W',
-                        shortForm: 'Wee',
-                        fullWord:  'Weeks',
+                        oneLetter: 'H',
+                        shortForm: 'Hə',
+                        fullWord:  'Həftə',
                     },
                     months: [
-                        'Januari',
-                        'Februari',
-                        'Maart',
-                        'April',
-                        'Mei',
-                        'Juni',
-                        'Juli',
-                        'Augustus',
-                        'September',
-                        'Oktober',
-                        'November',
-                        'December'
+                        'Yanvar',
+                        'Fevral',
+                        'Mart',
+                        'Aprel',
+                        'May',
+                        'İyun',
+                        'İyul',
+                        'Avqust',
+                        'Sentyabr',
+                        'Oktyabr',
+                        'Noyabr',
+                        'Dekabr'
                     ]
                 },
                 uk: {

@@ -600,19 +600,49 @@ function isSelected(p){ // PathPoint
 
 function inputNumberEvents (ev, _input, min, max, callback){
   var step,
+      round = false,
       _dir = (ev.keyName ? ev.keyName.toLowerCase().slice(0,1) : '#none#'),
       _value = parseFloat(_input.text),
+      _valueOld = _value,
       units = (',px,pt,mm,cm,in,'.indexOf(_input.text.length > 2 ? (',' + _input.text.replace(/ /g, '').slice(-2) + ',') : ',!,') > -1 ? _input.text.replace(/ /g, '').slice(-2) : '');
 
   min = (min === undefined ? 0 : min);
   max = (max === undefined ? Infinity : max);
-  step = (ev.shiftKey ? 10 : (ev.ctrlKey ? .1 : 1));
+  step = (ev.shiftKey && ev.ctrlKey ? 10
+    : (ev.ctrlKey && !ev.altKey ? .1
+      : (ev.ctrlKey && ev.altKey ? .5
+        : (ev.altKey ? .2 : 1)
+        )
+      )
+    );
+  if (ev.shiftKey && !ev.ctrlKey) {
+    round = true;
+    step = 10;
+  }
 
   if (isNaN(_value)) {
       _input.text = min;
   }
       else {
-          _value = ( (_dir === 'u') ? _value + step : ((_dir === 'd') ? _value - step : false) );
+          if (round) {
+            if (_dir === 'u') {
+              _value = Math.ceil(_value / 10) * 10;
+              if (_value === _valueOld) {
+                _value += step;
+              }
+            } else if (_dir === 'd') {
+              _value = Math.floor(_value / 10) * 10;
+              if (_value === _valueOld) {
+                _value -= step;
+              }
+            } else {
+              _value = false;
+            }
+          }
+            else {
+              _value = ( (_dir === 'u') ? _value + step : ((_dir === 'd') ? _value - step : false) );
+            }
+
           if (_value !== false) {
               _value = (_value <= min ? min : (_value >= max ? max : _value))
               _input.text = _value;
@@ -636,6 +666,7 @@ with (panel = win.add('panel')) {
     var __sliderInput = add('edittext', [0, 0, 50, 25], '50 px');
     var __slider = add('slider', [0, 0, 200, 15], 50, 1, 200);
 
+    __sliderInput.active = true;
     __slider.onChanging = function (e) { __sliderInput.text = Math.round(this.value); }
     __slider.onChange = function (e) { previewStart(); }
     __sliderInput.addEventListener('keydown', function (e) { inputNumberEvents(e, this, __slider.minvalue, __slider.maxvalue); });

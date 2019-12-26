@@ -175,15 +175,15 @@ Array.prototype.randomArray = function() {
 function startAction() {
     var bounds = 'visibleBounds',
         items = (sortByY.value ? selection.sort(function (a, b) {
-                    return a[bounds][1] <= b[bounds][1];
+                    return b[bounds][1] - a[bounds][1];
                 }) : (sortByX.value ? selection.sort(function (a, b) {
-                    return a[bounds][0] >= b[bounds][0];
+                    return a[bounds][0] - b[bounds][0];
                 }) : (sortByS.value ? selection.sort(function (a, b) {
-                    return a.width + a.height <= b.width + b.height;
+                    return (b.width + b.height) - (a.width + a.height);
                 }) : (sortByW.value ? selection.sort(function (a, b) {
-                    return a.width <= b.width;
+                    return b.width - a.width;
                 }) : (sortByH.value ? selection.sort(function (a, b) {
-                    return a.height <= b.height;
+                    return b.height - a.height;
                 }) : selection)))));
     if (randomOrderCheckbox.value) items.randomArray();
     if (reverseOrder.value) items.reverse();

@@ -27,18 +27,14 @@ var scriptName = 'long_shadow',
       return arr;
     }());
 
-function shadow (items, options) {
+function shadow (items, options, originalItem, compoundGroup) {
   options = options || {};
 
   function setShadow (item) {
     var shadowPath,
-      parent = item.parent;
+      parent = (originalItem || item).parent;
 
-    if (parent.typename === 'CompoundPathItem') {
-      parent = parent.parent;
-    }
-
-    var group = parent.groupItems.add(),
+    var group = (compoundGroup || parent.groupItems.add()),
       p = item.pathPoints,
       n = p.length;
 
@@ -80,18 +76,18 @@ function shadow (items, options) {
       shadowPath.closed = true;
     }
 
-    var copy = item.duplicate();
-    if (copy.typename === 'CompoundPathItem') {
-      copy.moveToBeginning(group);
-    }
-    copy.selected = false;
-    copy.position = [
-      (copy.position[0] - copy.position[0]) * Math.cos(angle) - (copy.position[1] + options.size - copy.position[1]) * Math.sin(angle) + copy.position[0],
-      (copy.position[0] - copy.position[0]) * Math.sin(angle) + (copy.position[1] + options.size - copy.position[1]) * Math.cos(angle) + copy.position[1]
-    ];
-    copy.moveToBeginning(group);
+    // var copy = (originalItem || item).duplicate();
+    // if (copy.typename === 'CompoundPathItem') {
+    //   copy.moveToBeginning(group);
+    // }
+    // copy.selected = false;
+    // copy.position = [
+    //   (copy.position[0] - copy.position[0]) * Math.cos(angle) - (copy.position[1] + options.size - copy.position[1]) * Math.sin(angle) + copy.position[0],
+    //   (copy.position[0] - copy.position[0]) * Math.sin(angle) + (copy.position[1] + options.size - copy.position[1]) * Math.cos(angle) + copy.position[1]
+    // ];
+    // copy.moveToBeginning(group);
 
-    group.move(item, ElementPlacement.PLACEAFTER);
+    group.move((originalItem || item), ElementPlacement.PLACEAFTER);
     group.opacity = 50;
   }
 
@@ -112,10 +108,11 @@ function shadow (items, options) {
         items[x].remove();
       }
     } else if (items[x].typename === 'CompoundPathItem') {
-      continue; // bug.. soon
-      shadow(items[x].pathItems);
+      var __compoundGroup = items[x].parent.groupItems.add();
+      __compoundGroup.move(items[x], ElementPlacement.PLACEAFTER);
+      shadow(items[x].pathItems, options, originalItem || items[x], __compoundGroup);
     } else if (items[x].typename === 'GroupItem') {
-      shadow(items[x].pageItems);
+      shadow(items[x].pageItems, options);
     } else if (items[x].typename === 'TextFrame') {
       options.removeItem = true;
       shadow(items[x].duplicate(items[x], ElementPlacement.PLACEAFTER).createOutline(), options);

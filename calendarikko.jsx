@@ -82,6 +82,10 @@ function calendarikko(userOptions) {
                     type: 'cmyk',
                     values: [0, 0, 0, 100]
                 },
+                months: {
+                    type: 'cmyk',
+                    values: [0, 0, 0, 100]
+                },
                 bodyEmpty: {
                     type: 'cmyk',
                     values: [0, 0, 0, 20]
@@ -555,14 +559,15 @@ function calendarikko(userOptions) {
         lastYear = options.endYear,
         lastMonth = options.endMonth,
         framesCollection = [],
+        namePrefix = 'calendarikko_',
         stylesName = {
-            months:       'calendarikko_months',
-            dayName:      'calendarikko_days-of-week',
-            weekends:     'calendarikko_weekends',
-            body:         'calendarikko_body',
-            bodyEmpty:    'calendarikko_body_prev-next-days',
-            weekNumbers:  'calendarikko_week_numbers',
-            doubleDays:   'calendarikko_double-days',
+            months:       namePrefix + 'months',
+            dayName:      namePrefix + 'days-of-week',
+            weekends:     namePrefix + 'weekends',
+            body:         namePrefix + 'body',
+            bodyEmpty:    namePrefix + 'body_prev-next-days',
+            weekNumbers:  namePrefix + 'week_numbers',
+            doubleDays:   namePrefix + 'double-days',
         };
 
     // set standart
@@ -633,6 +638,24 @@ function calendarikko(userOptions) {
                 : 400);
     }
 
+    function createSpot (name, clr, swGroup) {
+        var spots = activeDocument.spots;
+
+        try {
+            var oldSpot = activeDocument.spots.getByName(name);
+            oldSpot.color = clr;
+            return activeDocument.swatches.getByName(name).color;
+
+        } catch (err) {
+            var newSpot = spots.add();
+            newSpot.name = name;
+            newSpot.color = clr;
+            newSpot.colorType = ColorModel.SPOT;
+            swGroup.addSpot(newSpot);
+            return activeDocument.swatches.getByName(name).color;
+        }
+    }
+
     function createStyles() {
         try { bodyStyle = activeDocument.paragraphStyles.getByName(stylesName.body); } catch (e) { options.notStyles = !1; }
         try { bodyEmptyStyle = activeDocument.characterStyles.getByName(stylesName.bodyEmpty); } catch (e) { options.notStyles = !1; }
@@ -651,11 +674,18 @@ function calendarikko(userOptions) {
         doubleDays = doubleDays || activeDocument.characterStyles.add(stylesName.doubleDays);
 
         // font color
+        var swGroup, swGroup_name = namePrefix + 'color_group';
+        try { swGroup = activeDocument.swatchGroups.getByName(swGroup_name); }
+        catch (err) {
+            swGroup = activeDocument.swatchGroups.add();
+            swGroup.name = swGroup_name;
+        }
         options.fontColor = {
-            body: $.color(options.fontColor.body.type, options.fontColor.body.values),
-            bodyEmpty: $.color(options.fontColor.bodyEmpty.type, options.fontColor.bodyEmpty.values),
-            weekends: $.color(options.fontColor.weekends.type, options.fontColor.weekends.values),
-            weekNumbers: $.color(options.fontColor.weekNumbers.type, options.fontColor.weekNumbers.values),
+            body: createSpot(namePrefix + 'color_body', $.color(options.fontColor.body.type, options.fontColor.body.values), swGroup),
+            months: createSpot(namePrefix + 'color_months', $.color(options.fontColor.months.type, options.fontColor.months.values), swGroup),
+            bodyEmpty: createSpot(namePrefix + 'color_bodyEmpty', $.color(options.fontColor.bodyEmpty.type, options.fontColor.bodyEmpty.values), swGroup),
+            weekends: createSpot(namePrefix + 'color_weekends', $.color(options.fontColor.weekends.type, options.fontColor.weekends.values), swGroup),
+            weekNumbers: createSpot(namePrefix + 'color_weekNumbers', $.color(options.fontColor.weekNumbers.type, options.fontColor.weekNumbers.values), swGroup),
         };
 
 
@@ -665,9 +695,11 @@ function calendarikko(userOptions) {
     
             // months
             phStyleMonth.paragraphAttributes.justification = Justification.CENTER;
+            phStyleMonth.characterAttributes.fillColor = options.fontColor.months;
     
             // dayName
             phStyleDayName.paragraphAttributes.justification = Justification.CENTER;
+            phStyleDayName.characterAttributes.fillColor = options.fontColor.body;
     
             // body
             bodyStyle.characterAttributes.fillColor = options.fontColor.body;

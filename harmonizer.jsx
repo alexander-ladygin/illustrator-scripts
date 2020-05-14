@@ -14,7 +14,8 @@ var scriptName = 'Harmonizer',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
-    };
+    },
+    useClippingMask = true;
 
 var isUndo = false,
     win = new Window('dialog', scriptName + ' \u00A9 www.ladygin.pro', undefined);
@@ -141,21 +142,37 @@ function toGroupItems() {
     return __group;
 }
 
+function boundsClippingMask (item, prop) {
+    if (useClippingMask && item.typename === 'GroupItem' && item.clipped) {
+        var i = item.pageItems.length;
+        while (i-- > -1) {
+            if (item.pageItems[i].clipping) {
+                return (prop === 'item' ? item.pageItems[i] : item.pageItems[i][prop || 'geometricBounds']);
+            }
+        }
+    }
+    return (prop === 'item' ? item : item[prop]);
+}
+
 function selectionBounds (bounds) {
     bounds = (typeof bounds === 'string' && bounds.length && bounds.slice(0,1) === 'v' ? 'visibleBounds' : 'geometricBounds');
 
     var arr = selection, x = [],
         y = [], w = [], h = [],
         size = [[], []],
-        i = arr.length;
+        i = arr.length,
+        bnds = [],
+        __item;
 
     while (i--) {
-        x.push(arr[i][bounds][0]);
-        y.push(arr[i][bounds][1]);
-        w.push(arr[i][bounds][2]);
-        h.push(arr[i][bounds][3]);
-        size[0].push(arr[i][bounds][2] - arr[i][bounds][0]);
-        size[1].push(arr[i][bounds][1] - arr[i][bounds][3]);
+        __item = boundsClippingMask(arr[i], 'item');
+        bnds = __item[bounds];
+        x.push(bnds[0]);
+        y.push(bnds[1]);
+        w.push(bnds[2]);
+        h.push(bnds[3]);
+        size[0].push(bnds[2] - bnds[0]);
+        size[1].push(bnds[1] - bnds[3]);
     };
 
     return [Math.min.apply(null, x), Math.max.apply(null, y), Math.max.apply(null, w), Math.min.apply(null, h), Math.max.apply(null, size[0]), Math.max.apply(null, size[1])];
@@ -175,15 +192,25 @@ Array.prototype.randomArray = function() {
 function startAction() {
     var bounds = 'visibleBounds',
         items = (sortByY.value ? selection.sort(function (a, b) {
-                    return b[bounds][1] - a[bounds][1];
+                    var a_bounds = boundsClippingMask(a, bounds),
+                        b_bounds = boundsClippingMask(b, bounds);
+                    return b_bounds[1] - a_bounds[1];
                 }) : (sortByX.value ? selection.sort(function (a, b) {
-                    return a[bounds][0] - b[bounds][0];
+                    var a_bounds = boundsClippingMask(a, bounds),
+                        b_bounds = boundsClippingMask(b, bounds);
+                    return a_bounds[0] - b_bounds[0];
                 }) : (sortByS.value ? selection.sort(function (a, b) {
-                    return (b.width + b.height) - (a.width + a.height);
+                    var _a = boundsClippingMask(a, 'item'),
+                        _b = boundsClippingMask(b, 'item');
+                    return (_b.width + _b.height) - (_a.width + _a.height);
                 }) : (sortByW.value ? selection.sort(function (a, b) {
-                    return b.width - a.width;
+                    var _a = boundsClippingMask(a, 'item'),
+                        _b = boundsClippingMask(b, 'item');
+                    return _b.width - _a.width;
                 }) : (sortByH.value ? selection.sort(function (a, b) {
-                    return b.height - a.height;
+                    var _a = boundsClippingMask(a, 'item'),
+                        _b = boundsClippingMask(b, 'item');
+                    return _b.height - _a.height;
                 }) : selection)))));
     if (randomOrderCheckbox.value) items.randomArray();
     if (reverseOrder.value) items.reverse();
@@ -206,10 +233,20 @@ function startAction() {
     }
 
     if (l > 1) {
+        var __item, __bnds;
         for (var i = j = 0; i < l; i++, j++) {
             if (j === columns) { __rows++; j = 0; }
-            items[i].left = bnds[0] + (bnds[4] + gutter.x) * j + __align(__posXValue, items[i][bounds]);
-            items[i].top = bnds[1] - (bnds[5] + gutter.y) * __rows - __align(__posYValue, items[i][bounds]);
+
+            __item = boundsClippingMask(items[i], 'item');
+            __bnds = boundsClippingMask(items[i], bounds);
+
+            if (__item !== items[i]) {
+                items[i].left = bnds[0] + (bnds[4] + gutter.x) * j + __align(__posXValue, __bnds) + (items[i].geometricBounds[0] - __item.geometricBounds[0]);
+                items[i].top = bnds[1] - (bnds[5] + gutter.y) * __rows - __align(__posYValue, __bnds) + (items[i].geometricBounds[1] - __item.geometricBounds[1]);
+            } else {
+                items[i].left = bnds[0] + (bnds[4] + gutter.x) * j + __align(__posXValue, __bnds);
+                items[i].top = bnds[1] - (bnds[5] + gutter.y) * __rows - __align(__posYValue, __bnds);
+            }
         }
     }
         else {

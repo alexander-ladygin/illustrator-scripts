@@ -12,7 +12,7 @@ Windows (64 bit): C:\Program Files\Adobe\Adobe Illustrator [vers.] (64 Bit)\Pres
 
 ## **ArtboardResizeWithObjects**
 Script to resize on value an document artboards with all the objects on it.
-### Usage:
+#### Usage:
 1. Open your file
 2. Run script File → Scripts → artboardResizeWithObjects.jsx
 3. Select the size of the artboard or a percentage of the size, also configure other items
@@ -24,7 +24,7 @@ Script to resize on value an document artboards with all the objects on it.
 ## **ArtboardsRotateWithObjects**
 Script to rotate 90 degrees an document artboards with all the objects on it.
 Author: Alexander Ladygin. UI: [Sergey Osokin](https://github.com/creold/).
-### Usage:
+#### Usage:
 1. Open your file
 2. Run script File → Scripts → artboardsRotateWithObjects.jsx
 3. Press button "OK" or press enter
@@ -34,7 +34,7 @@ Author: Alexander Ladygin. UI: [Sergey Osokin](https://github.com/creold/).
 
 ## **Harmonizer**
 Sort a lot of objects in Adobe Illustrator is hard. With Harmonizer you can just achieve results with a few clicks.
-### Usage:
+#### Usage:
 1. Select objects
 2. Run script File → Scripts → harmonizer.jsx
 3. Set the desired settings
@@ -52,7 +52,7 @@ Author: Alexander Ladygin. Code refactoring: [Sergey Osokin](https://github.com/
 
 ## **Cropulka**
 The script cuts all that goes beyond the artboard. This script is ideal for microstock and printing, well, or just you need to trim the elements on the artboard.
-### Usage:
+#### Usage:
 1. Run script File → Scripts → cropulka.jsx
 2. Select the desired settings
     - The script also cuts the images and the mesh, although the mesh will be rasterized and the picture will lose its connection. Also all raster effects will be separate images.
@@ -63,7 +63,7 @@ The script cuts all that goes beyond the artboard. This script is ideal for micr
 
 ## **Fillinger**
 A Jongware Script - modified by Alexander Ladygin. The script fills the object with other objects in a random order or with one object. The ability to select the rotation of the object and much more.
-### Usage:
+#### Usage:
 1. Select objects
 2. Run script File → Scripts → fillinger.jsx
 3. Select the desired settings
@@ -81,7 +81,7 @@ The script can:
 - Random rotate
 - Random opacity
 - Random position X, Y
-### Usage:
+#### Usage:
 1. Select objects
 2. Run script File → Scripts → randomus.jsx
 3. Press buttons - result in real time
@@ -92,7 +92,7 @@ The script can:
 
 ## **ReplaceItems**
 Script for replacing objects with objects, the top object, an object from the clipboard. It can rotate elements in random order, copy width and height, and much more.
-### Usage:
+#### Usage:
 1. Select objects
 2. Select the desired settings
     - You can copy an object to the clipboard and use it as an object to insert.
@@ -104,7 +104,7 @@ Script for replacing objects with objects, the top object, an object from the cl
 
 ## **PuzzleClipper**
 The script makes copies of the last (lowest) object and puts them into a mask based on other (upper) objects. Creates a puzzle.
-## Usage:
+#### Usage:
 1. Select objects
     - The last (lowest in \[Layers\]) object will be taken as the main element for the puzzle
 2. Select the desired settings
@@ -117,7 +117,7 @@ The script makes copies of the last (lowest) object and puts them into a mask ba
 
 ## **ArtboardItemsMoveToNewLayer**
 The script places all objects on the artboard in a new layer.
-### Usage:
+#### Usage:
 1. Run script File → Scripts → artboardItemsMoveToNewLayer.jsx
 2. Select the desired artboards
     - If custom is selected, you can specify the numbers of the artboard as pages when printing, for example: 1, 2, 5-8
@@ -128,7 +128,7 @@ The script places all objects on the artboard in a new layer.
 
 ## **CreateArtboardsFromTheSelection**
 The script creates artboards on selected items
-### Usage:
+#### Usage:
 1. Select objects
 2. Run script File → Scripts → createArtboardsFromTheSelection.jsx
 3. Set the desired settings
@@ -139,7 +139,7 @@ The script creates artboards on selected items
 
 ## **ForceCloseOtherDocuments**
 The script closes the documents except the active one, it closes them without saving. It happens that you open many documents and various auxiliary elements, and to close them you need time, which you are wasting, the script will help you save time.
-## Usage:
+#### Usage:
 1. Select objects
 2. Select the desired settings
     - You can copy an object to the clipboard and use it as an object to insert.
@@ -152,7 +152,7 @@ The script closes the documents except the active one, it closes them without sa
 ## **BatchTextEdit**
 Script for editing the contents of the text frames all together.
 Author: [Hiroyuki Sato](https://github.com/shspage). Modify (sort by [Layers] and reverse): Alexander Ladygin
-## Usage:
+#### Usage:
 1. Select the textframe(s).
 2. Run script File → Scripts → batchTextEdit.jsx
 3. Edit the contents in the dialog.
@@ -161,7 +161,7 @@ Author: [Hiroyuki Sato](https://github.com/shspage). Modify (sort by [Layers] an
 
 ## **CompoundFix**
 Script to fix the bug in compoundPathItems. In compoundPathItem there can be a group, because of which there are all sorts of problems, this script will help to fix this bug.
-## Usage:
+#### Usage:
 1. Select items (optional).
 2. Run script File → Scripts → compoundFix.jsx
 3. Select - fix all or selected.
@@ -170,7 +170,7 @@ Script to fix the bug in compoundPathItems. In compoundPathItem there can be a g
 
 ## **TransferSwatches**
 The script copies color samples from the document to the active document while maintaining the hierarchy.
-## Usage:
+#### Usage:
 1. Run script File → Scripts → transferSwatches.jsx
 2. Select the document from which to copy the swatches
 3. Press "OK" or press enter

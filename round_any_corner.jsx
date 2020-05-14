@@ -664,7 +664,7 @@ with (panel = win.add('panel')) {
 
   with (add('group')) {
     var __sliderInput = add('edittext', [0, 0, 50, 25], '50 px');
-    var __slider = add('slider', [0, 0, 200, 15], 50, 1, 200);
+    var __slider = add('slider', [0, 0, 200, 15], 50, 0, 200);
 
     __sliderInput.active = true;
     __slider.onChanging = function (e) { __sliderInput.text = Math.round(this.value); }

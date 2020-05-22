@@ -55,7 +55,17 @@ var scriptName = 'Griddder',
     $cropMarksColor = {
         type: 'CMYKColor',
         values: [0, 0, 0, 100]
-    }
+    };
+
+function checkEffects() {
+    var testPath = activeDocument.pathItems.add(),
+        value = (testPath.applyEffect instanceof Function);
+
+    testPath.remove();
+    return value;
+}
+
+var effectsEnabled = checkEffects();
 
 Object.prototype.griddder = function (userOptions) {
     try {
@@ -86,6 +96,7 @@ Object.prototype.griddder = function (userOptions) {
             }
         }.extend(userOptions || {}, true);
 
+        options.align = options.align.toLowerCase();
         // convert units
         options.gutter.rows = $.convertUnits(options.gutter.rows, 'px');
         options.gutter.columns = $.convertUnits(options.gutter.columns, 'px');
@@ -184,78 +195,120 @@ Object.prototype.griddder = function (userOptions) {
                 itemSize.height = w;
             }
 
+            var useEffects = (effectsEnabled && __useEffect.value);
+
             for (var i = 0; i < columns; i++) {
                 for (var j = 0; j < rows; j++) {
-                    var s = (!i && !j ? item : item.duplicate());
+                    var s = (!i && !j ? item : (!effectsEnabled || !__useEffect.value ? item.duplicate() : item)),
+                        bnds = getItemMask(s)[bounds + 'Bounds'];
+
                     collection.push(s);
 
-                    s.left += (itemSize.width * i);
-                    s.top -= (itemSize.height * j);
+                    if (!effectsEnabled || !__useEffect.value) {
+                        s.left += (itemSize.width * i);
+                        s.top -= (itemSize.height * j);
+                    } else if (effectsEnabled && __useEffect.value) {
+                        bnds = [
+                            bnds[0] + (itemSize.width * i),
+                            bnds[1] - (itemSize.height * j),
+                            bnds[2] + (itemSize.width * i),
+                            bnds[3] - (itemSize.height * j)
+                        ];
+                    }
 
-                    var bnds = getItemMask(s)[bounds + 'Bounds'];
 
                     // columns
-                    if (options.cropMarks.enabled && !i) {
+                    if ((options.cropMarks.enabled || (effectsEnabled && __useEffect.value)) && !i) {
                         // first
                         if (gutter.rows || !j) createCropMark([
-                            [bnds[0] - options.cropMarks.offset, bnds[1] + (!j ? marksPos : 0)],
-                            [bnds[0] - options.cropMarks.size - options.cropMarks.offset, bnds[1] + (!j ? marksPos : 0)]
+                            [bnds[0] - (!useEffects ? options.cropMarks.offset : 0), bnds[1] + (!j ? marksPos : 0)],
+                            [bnds[0] - (!useEffects ? options.cropMarks.size : 0) - (!useEffects ? options.cropMarks.offset : 0), bnds[1] + (!j ? marksPos : 0)]
                         ]);
                         createCropMark([
-                            [bnds[0] - options.cropMarks.offset, bnds[3] + (j === rows - 1 ? -marksPos : 0)],
-                            [bnds[0] - options.cropMarks.size - options.cropMarks.offset, bnds[3] + (j === rows - 1 ? -marksPos : 0)]
+                            [bnds[0] - (!useEffects ? options.cropMarks.offset : 0), bnds[3] + (j === rows - 1 ? -marksPos : 0)],
+                            [bnds[0] - (!useEffects ? options.cropMarks.size : 0) - (!useEffects ? options.cropMarks.offset : 0), bnds[3] + (j === rows - 1 ? -marksPos : 0)]
                         ]);
                         // last
                         if (gutter.rows || !j) createCropMark([
-                            [bnds[0] + itemSize.width * columns - gutter.rows + options.cropMarks.offset, bnds[1] + (!j ? marksPos : 0)],
-                            [bnds[0] + options.cropMarks.size + itemSize.width * columns - gutter.rows + options.cropMarks.offset, bnds[1] + (!j ? marksPos : 0)]
+                            [bnds[0] + itemSize.width * columns - gutter.rows + (!useEffects ? options.cropMarks.offset : 0), bnds[1] + (!j ? marksPos : 0)],
+                            [bnds[0] + (!useEffects ? options.cropMarks.size : 0) + itemSize.width * columns - gutter.rows + (!useEffects ? options.cropMarks.offset : 0), bnds[1] + (!j ? marksPos : 0)]
                         ]);
                         // lastEnd
                         createCropMark([
-                            [bnds[0] + itemSize.width * columns - gutter.rows + options.cropMarks.offset, bnds[3] + (j === rows - 1 ? -marksPos : 0)],
-                            [bnds[0] + options.cropMarks.size + itemSize.width * columns - gutter.rows + options.cropMarks.offset, bnds[3] + (j === rows - 1 ? -marksPos : 0)]
+                            [bnds[0] + itemSize.width * columns - gutter.rows + (!useEffects ? options.cropMarks.offset : 0), bnds[3] + (j === rows - 1 ? -marksPos : 0)],
+                            [bnds[0] + (!useEffects ? options.cropMarks.size : 0) + itemSize.width * columns - gutter.rows + (!useEffects ? options.cropMarks.offset : 0), bnds[3] + (j === rows - 1 ? -marksPos : 0)]
                         ]);
                     }
                     // rows
-                    if (options.cropMarks.enabled && !j) {
+                    if ((options.cropMarks.enabled || (effectsEnabled && __useEffect.value)) && !j) {
                         // first
                         if (gutter.columns || !i) createCropMark([
-                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] + gutter.columns + options.cropMarks.offset - gutter.columns],
-                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] + gutter.columns + options.cropMarks.size + options.cropMarks.offset - gutter.columns]
+                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] + gutter.columns + (!useEffects ? options.cropMarks.offset : 0) - gutter.columns],
+                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] + gutter.columns + (!useEffects ? options.cropMarks.size : 0) + (!useEffects ? options.cropMarks.offset : 0) - gutter.columns]
                         ]);
                         createCropMark([
-                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] + gutter.columns + options.cropMarks.offset - gutter.columns],
-                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] + gutter.columns + options.cropMarks.size + options.cropMarks.offset - gutter.columns]
+                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] + gutter.columns + (!useEffects ? options.cropMarks.offset : 0) - gutter.columns],
+                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] + gutter.columns + (!useEffects ? options.cropMarks.size : 0) + (!useEffects ? options.cropMarks.offset : 0) - gutter.columns]
                         ]);
                         // last
                         if (gutter.columns || !i) createCropMark([
-                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] - itemSize.height * rows - options.cropMarks.offset + gutter.columns],
-                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] - itemSize.height * rows - options.cropMarks.size - options.cropMarks.offset + gutter.columns]
+                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] - itemSize.height * rows - (!useEffects ? options.cropMarks.offset : 0) + gutter.columns],
+                            [bnds[0] + (!i ? -marksPos : 0), bnds[1] - itemSize.height * rows - (!useEffects ? options.cropMarks.size : 0) - (!useEffects ? options.cropMarks.offset : 0) + gutter.columns]
                         ]);
                         // lastEnd
                         createCropMark([
-                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] - itemSize.height * rows - options.cropMarks.offset + gutter.columns],
-                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] - itemSize.height * rows - options.cropMarks.size - options.cropMarks.offset + gutter.columns]
+                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] - itemSize.height * rows - (!useEffects ? options.cropMarks.offset : 0) + gutter.columns],
+                            [bnds[2] + (i === columns - 1 ? marksPos : 0), bnds[1] - itemSize.height * rows - (!useEffects ? options.cropMarks.size : 0) - (!useEffects ? options.cropMarks.offset : 0) + gutter.columns]
                         ]);
                     }
                 }
             }
 
-            if (fitToArtboard) group.align('center', {
-                bounds: 'visible'
-            });
-            else if (typeof options.align === 'string' && options.align.toLowerCase() !== 'none') group.align(options.align);
+            if (effectsEnabled && __useEffect.value) {
+                var createGroup = true;
+                if (columns > 1) {
+                    item.applyEffect('<LiveEffect name="Adobe Transform"><Dict data="B transformPatterns 0 B transformObjects 1 R scaleV_Percent 100 R scaleH_Percent 100 R scaleH_Factor 1 R scaleV_Factor 1 R rotate_Degrees 0 R moveV_Pts 0 R moveH_Pts ' + itemSize.width + ' R rotate_Radians 0 I numCopies ' + (columns - 1) + ' I pinPoint 4 B randomize 0 B reflectX 0 B reflectY 0 B scaleLines 0"/></LiveEffect>');
+                } else {
+                    createGroup = false;
+                }
+
+                if (rows > 1) {
+                    var itemGroup = item;
+                    if (createGroup) {
+                        itemGroup = activeDocument.groupItems.add();
+                        itemGroup.moveBefore(item, ElementPlacement.PLACEBEFORE);
+                        item.moveToBeginning(itemGroup);
+                    }
+                    itemGroup.applyEffect('<LiveEffect name="Adobe Transform"><Dict data="B transformPatterns 0 B transformObjects 1 R scaleV_Percent 100 R scaleH_Percent 100 R scaleH_Factor 1 R scaleV_Factor 1 R rotate_Degrees 0 R moveV_Pts ' + -itemSize.height + ' R moveH_Pts 0 R rotate_Radians 0 I numCopies ' + (rows - 1) + ' I pinPoint 4 B randomize 0 B reflectX 0 B reflectY 0 B scaleLines 0"/></LiveEffect>');
+                }
+            }
+
+            if (fitToArtboard && !(effectsEnabled && __useEffect.value)) {
+                group.align('center', {
+                    bounds: 'visible'
+                });
+            } else if (!fitToArtboard && typeof options.align === 'string' && options.align.toLowerCase() !== 'none') {
+                group.align(options.align);
+            }
+
+            if (effectsEnabled && __useEffect.value) {
+                group.align(fitToArtboard ? 'center' : options.align);
+
+                if (!options.cropMarks.enabled) {
+                    marksCollection.each(function (item) {
+                        item.remove();
+                    });
+                }
+            }
 
             if (options.group === 'items_and_cropmarks_singly') {
                 if (options.cropMarks.enabled) {
                     cropMarksGroup.moveBefore(group);
                 }
-            }
-            else if (options.cropMarks.enabled && options.group === 'only_items') {
+            } else if (options.cropMarks.enabled && options.group === 'only_items') {
                 cropMarksGroup.moveBefore(group);
                 cropMarksGroup.ungroup();
-            }
-            else if ((options.group === 'none') || (options.group === 'only_cropmarks')) {
+            } else if ((options.group === 'none') || (options.group === 'only_cropmarks')) {
                 group.ungroup();
             }
 
@@ -399,10 +452,17 @@ var win = new Window('dialog', scriptName + copyright),
         orientation = 'column';
         alignChildren = 'left';
 
-        var __CMEnabled = add('checkbox', undefined, 'Crop marks enabled');
-        __CMEnabled.value = false;
-        __CMEnabled.onClick = function() {
-            cmGroup.enabled = this.value;
+        with (add('group')) {
+            orientation = 'row';
+
+            var __CMEnabled = add('checkbox', [0, 0, 160, 25], 'Crop marks enabled');
+            __CMEnabled.value = false;
+            __CMEnabled.onClick = function() {
+                cmGroup.enabled = this.value;
+            }
+
+            var __useEffect = add('checkbox', undefined, 'Use transform effect?');
+            __useEffect.enabled = effectsEnabled;
         }
 
         with (cmGroup = add('group')) {
@@ -546,7 +606,8 @@ with (globalGroup.add('group')) {
                 __cmSize.text,
                 __cmWeight.text,
                 __cmOffset.text,
-                __cmPosition.selection.index
+                __cmPosition.selection.index,
+                __useEffect.value
             ].toString() + '\n' + $cropMarksColor.type + '\n' + $cropMarksColor.values.toString() + '\n' + $margins;
     
         $file.open('w');
@@ -576,6 +637,7 @@ with (globalGroup.add('group')) {
                 __cmWeight.text = $main[9];
                 __cmOffset.text = $main[10];
                 __cmPosition.selection = parseInt($main[11]);
+                __useEffect.value = ($main[12] === 'true');
 
                 $cropMarksColor.type = $cmColorType;
                 $cropMarksColor.values = $cmColorValues;

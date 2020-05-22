@@ -58,7 +58,12 @@ function bigBang (items, userOptions) {
             u = Math.atan2(y1 - y2, x1 - x2),
             d = (Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2))) + options.offset;
 
-        if (delta) d *= delta;
+        // if (delta) d *= delta;
+        // if (delta) d *= Math.sqrt(x1 + y1);
+        var distSq = (x1 * x2 + y1 * y2);
+        var f = ((39.5 * 0.08) / (distSq * Math.sqrt(distSq + 0.15)) * delta).toFixed(4);
+        d += f;
+        alert(f);
 
         var cos = Math.cos(u) * d,
             sin = Math.sin(u) * d,

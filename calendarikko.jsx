@@ -38,7 +38,24 @@ var scriptName = 'Calendarikko',
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
     },
-    $margins = '0';
+    $margins = '0',
+    $paddings = '0',
+    isShowReplaceWindow = false,
+    SYSTEMNAMES = {
+        prefix:       'clkko',
+        calendarName: 'full',
+        layer:        'layer',
+        frame:        'frame',
+        month:        'month',
+        body:         'body',
+        weekNames:    'weekNames',
+        weekNumbers:  'weekNumbers',
+        weekFrames:   'weekFrame',
+        symbol:       'symbol',
+        symbolName:   '',
+    },
+    winForReplaceSize = null;
+    SYSTEMNAMES.symbolName = SYSTEMNAMES.prefix + SYSTEMNAMES.symbol;
 
 function calendarikko(userOptions) {
     var $date = new Date(),
@@ -74,9 +91,12 @@ function calendarikko(userOptions) {
                 week: true,
                 month: true,
                 yearInMonth: true,
+                numberMonth: true,
             },
             margin: '0',
+            padding: '0',
             compact_mode: false,
+            isReplace: false,
             fontColor: {
                 body: {
                     type: 'cmyk',
@@ -138,15 +158,17 @@ function calendarikko(userOptions) {
             language: 'ru',
             daysFormat: 'shortForm',
             systemNames: {
-                prefix:      'calendarikko__',
-                layer:       'calendar',
-                frame:       'frame',
-                month:       'month',
-                body:        'body',
-                weekNames:   'weekNames',
-                weekNumbers: 'weekNumbers',
-                weekFrames:  'weekFrame',
-                symbol:      'symbol',
+                prefix:       'clkko',
+                calendarName: 'full',
+                layer:        'layer',
+                frame:        'frame',
+                month:        'month',
+                body:         'body',
+                weekNames:    'weekNames',
+                weekNumbers:  'weekNumbers',
+                weekFrames:   'weekFrame',
+                symbol:       'symbol',
+                symbolName:   '',
             },
             names: {
                 ru: {
@@ -536,6 +558,13 @@ function calendarikko(userOptions) {
             }
         }.extend(userOptions || {}, true);
 
+        if (options.systemNames.prefix.indexOf('_') < 0) {
+            options.systemNames.prefix = options.systemNames.calendarName + '_' + options.systemNames.prefix + '_';
+        }
+        if (!options.systemNames.symbolName) {
+            options.systemNames.symbolName = options.systemNames.prefix + options.systemNames.symbol;
+        }
+
     // convert units
         options.frameWidth = $.getUnits(options.frameWidth, false) ? $.convertUnits(options.frameWidth, 'px') : options.frameWidth;
         options.frameHeight = $.getUnits(options.frameHeight, false) ? $.convertUnits(options.frameHeight, 'px') : options.frameHeight;
@@ -559,7 +588,7 @@ function calendarikko(userOptions) {
         lastYear = options.endYear,
         lastMonth = options.endMonth,
         framesCollection = [],
-        namePrefix = 'calendarikko_',
+        namePrefix = options.systemNames.prefix,
         stylesName = {
             months:       namePrefix + 'months',
             dayName:      namePrefix + 'days-of-week',
@@ -613,6 +642,16 @@ function calendarikko(userOptions) {
         if (options.frameHeight === 'selectionsize') {
             options.margin[0] = 0;
             options.margin[2] = 0;
+        }
+    
+        options.padding = parseMargin(options.padding);
+        if (options.frameWidth === 'selectionsize') {
+            options.padding[1] = 0;
+            options.padding[3] = 0;
+        }
+        if (options.frameHeight === 'selectionsize') {
+            options.padding[0] = 0;
+            options.padding[2] = 0;
         }
     
         options.frameWidth = typeof options.frameWidth === 'number'
@@ -863,51 +902,59 @@ function calendarikko(userOptions) {
 
     function createMonth ($layer, x, y, anchor_x, anchor_y, $frame) {
         var monthGroup = ($frame && $frame.typename ? $frame : $layer.groupItems.add()),
+            frameWidthWithPadding = options.frameWidth - options.padding[1] -  options.padding[3],
+            frameHeightWithPadding = options.frameHeight - options.padding[0] - options.padding[2],
             rectDirection = anchor_y < 0 ? -1 : 1,
             heightDayTitle = !options.enableFrames.day ? 0 : options.frameHeight / frameColumns / 2,
             offsetDayTitle = !options.enableFrames.day ? 0 : 0,
-            heightMonthTitle = !options.enableFrames.month ? 0 : options.frameHeight / frameColumns - offsetDayTitle,
-            heightArea = options.frameHeight - heightMonthTitle - heightDayTitle - offsetDayTitle * 2,
-            widthWeeks = !options.enableFrames.week ? 0 : options.frameWidth / 7 / 2,
+            heightMonthTitle = !options.enableFrames.month ? 0 : frameHeightWithPadding / frameColumns - offsetDayTitle,
+            heightArea = frameHeightWithPadding - heightMonthTitle - heightDayTitle - offsetDayTitle * 2,
+            widthWeeks = !options.enableFrames.week ? 0 : frameWidthWithPadding / 7 / 2,
             area, frame,
             monthTitle, monthTitleFrame, dayTitle, dayTitleFrame, doubleDayTitleFrame,
             weeksTitle, weeksTitleFrame, doubleWeeksTitleFrame,
             weeksNumbersTitle, weeksNumbersTitleFrame, doubleWeeksNumbersTitleFrame,
             props = {
-                frame: {
+                backdrop: {
                     x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x),
                     y: ((anchor_y - options.margin[0] * rectDirection)) + ((options.frameHeight + options.gutter_y) * y),
                     w: options.frameWidth,
                     h: options.frameHeight,
                 },
+                frame: {
+                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x) + options.padding[3],
+                    y: ((anchor_y - options.margin[0] * rectDirection)) + ((options.frameHeight + options.gutter_y) * y) - options.padding[0],
+                    w: frameWidthWithPadding,
+                    h: frameHeightWithPadding,
+                },
                 monthTitle: {
-                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x),
-                    y: ((anchor_y - options.margin[0] * rectDirection)) + ((options.frameHeight + options.gutter_y) * y),
-                    w: options.frameWidth,
+                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x) + options.padding[3],
+                    y: ((anchor_y - options.margin[0] * rectDirection)) + ((options.frameHeight + options.gutter_y) * y) - options.padding[0],
+                    w: frameWidthWithPadding,
                     h: heightMonthTitle,
                 },
                 dayTitle: {
-                    x: (anchor_x + options.margin[3] + widthWeeks) + ((options.frameWidth + options.gutter_x) * x),
-                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - offsetDayTitle) + ((options.frameHeight + options.gutter_y) * y),
-                    w: options.frameWidth - widthWeeks,
+                    x: (anchor_x + options.margin[3] + widthWeeks) + ((options.frameWidth + options.gutter_x) * x) + options.padding[3],
+                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - offsetDayTitle) + ((options.frameHeight + options.gutter_y) * y) - options.padding[0],
+                    w: frameWidthWithPadding - widthWeeks,
                     h: heightDayTitle,
                 },
                 weeksNumbersTitle: {
-                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x),
-                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - offsetDayTitle) + ((options.frameHeight + options.gutter_y) * y),
+                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x) + options.padding[3],
+                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - offsetDayTitle) + ((options.frameHeight + options.gutter_y) * y) - options.padding[0],
                     w: widthWeeks,
                     h: heightDayTitle,
                 },
                 weeksTitle: {
-                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x),
-                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - heightDayTitle - offsetDayTitle * 2) + ((options.frameHeight + options.gutter_y) * y),
+                    x: (anchor_x + options.margin[3]) + ((options.frameWidth + options.gutter_x) * x) + options.padding[3],
+                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - heightDayTitle - offsetDayTitle * 2) + ((options.frameHeight + options.gutter_y) * y) - options.padding[0],
                     w: widthWeeks,
                     h: heightArea,
                 },
                 body: {
-                    x: (anchor_x + options.margin[3] + widthWeeks) + ((options.frameWidth + options.gutter_x) * x),
-                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - heightDayTitle - offsetDayTitle * 2) + ((options.frameHeight + options.gutter_y) * y),
-                    w: options.frameWidth - widthWeeks,
+                    x: (anchor_x + options.margin[3] + widthWeeks) + ((options.frameWidth + options.gutter_x) * x) + options.padding[3],
+                    y: ((anchor_y - options.margin[0] * rectDirection) - heightMonthTitle - heightDayTitle - offsetDayTitle * 2) + ((options.frameHeight + options.gutter_y) * y) - options.padding[0],
+                    w: frameWidthWithPadding - widthWeeks,
                     h: heightArea,
                 }
             };
@@ -953,10 +1000,16 @@ function calendarikko(userOptions) {
 
             // set content & font size
             monthTitleFrame.contents = options.names[options.language].months[$date.getMonth()];
-            if (options.enableFrames.yearInMonth) {
-                monthTitleFrame.contents = ($date.getMonth() + 1) + ' ' + monthTitleFrame.contents + ' ' + $date.getFullYear();
+            if (options.enableFrames.numberMonth) {
+                monthTitleFrame.contents = ($date.getMonth() + 1) + ' ' + monthTitleFrame.contents;
+            } else {
+                monthTitleFrame.contents = monthTitleFrame.contents.replace(/{month}/g, ($date.getMonth() + 1));
             }
-                else monthTitleFrame.contents = monthTitleFrame.contents.replace(/{year}/g, $date.getFullYear());
+            if (options.enableFrames.yearInMonth) {
+                monthTitleFrame.contents += ' ' + $date.getFullYear();
+            } else {
+                monthTitleFrame.contents = monthTitleFrame.contents.replace(/{year}/g, $date.getFullYear());
+            }
         }
 
         // days title
@@ -1081,7 +1134,7 @@ function calendarikko(userOptions) {
         // days
         if (options.enableFrames.day) {
             var monthsNames = options.names[options.language][options.daysFormat];
-            if (!options.notStyles) phStyleDayName.characterAttributes.size = options.daysFormat !== 'fullWord' ? heightDayTitle * 0.5 : (options.frameWidth - widthWeeks) / frameColumns / (monthsNames.toString().replace(/,/g, '').length / monthsNames.length);
+            if (!options.notStyles) phStyleDayName.characterAttributes.size = options.daysFormat !== 'fullWord' ? heightDayTitle * 0.5 : (frameWidthWithPadding - widthWeeks) / frameColumns / (monthsNames.toString().replace(/,/g, '').length / monthsNames.length);
             phStyleDayName.applyTo(dayTitleFrame.textRange);
 
             if (!options.notStyles && daysFormatCorrectHeight === false) {
@@ -1170,27 +1223,37 @@ function calendarikko(userOptions) {
     }
 
     function createShapes (placement, $props) {
+        var POSITION_MODE = 'backdrop'; // backdrop, frame
+
         if (options.shapes.slice(0,1) === 'n') return;
 
         var symbolFrame, symbolFrameItem, symbolFrameReplace,
             sItems = activeDocument.symbolItems,
             symbolGroup = activeDocument.groupItems.add(),
-            symbolName = options.systemNames.prefix + options.systemNames.symbol,
+            symbolName = options.systemNames.symbolName,
             shapesCollection = [], $shapesDay, $shapesWeek;
 
+        // if options.shapes === 'use-'
         if (options.shapes.slice(0,1) === 'u') {
             try {
                 symbolFrame = activeDocument.symbols.getByName(symbolName);
                 var sItem = pasteSymbol();
+
+                // if options.shapes === 'use-fill'
                 if (options.shapes.split('-')[1][0] === 'f') {
-                    sItem.width = $props.frame.w;
-                    sItem.height = $props.frame.h;
-                    sItem.position = [$props.frame.x, $props.frame.y];
+                    sItem.width = $props.backdrop.w;
+                    sItem.height = $props.backdrop.h;
+                    sItem.position = [$props[POSITION_MODE].x, $props[POSITION_MODE].y];
                     symbolGroup.remove();
                 }
+
                 return sItem;
             } catch (e) {}
         }
+
+        // create backdrop shape
+            var shapeBackdrop = symbolGroup.pathItems.rectangle($props.backdrop.y, $props.backdrop.x, $props.backdrop.w, $props.backdrop.h);
+            shapesCollection.push(shapeBackdrop);
 
 
         if (options.enableFrames.month) {
@@ -1253,9 +1316,13 @@ function calendarikko(userOptions) {
         }
         shapesCollection.push($shapesBody);
 
-        function pasteSymbol (__frame) {
+        function pasteSymbol (__frame, fillToFrame) {
             symbolFrameItem = activeDocument.symbolItems.add(__frame || symbolFrame);
-            symbolFrameItem.position = [$props.frame.x, $props.frame.y];
+            if (fillToFrame) {
+                symbolFrameItem.width = $props.backdrop.w;
+                symbolFrameItem.height = $props.backdrop.h;
+            }
+            symbolFrameItem.position = [$props[POSITION_MODE].x, $props[POSITION_MODE].y];
             symbolFrameItem.moveToBeginning(placement);
             return symbolFrameItem;
         }
@@ -1264,7 +1331,7 @@ function calendarikko(userOptions) {
         try {
             symbolFrame = activeDocument.symbols.getByName(symbolName);
 
-            if (!shapesCreated) {
+            if (!options.isReplace && !shapesCreated) {
                 // create symbol
                 symbolFrameReplace = activeDocument.symbols.add(symbolGroup, SymbolRegistrationPoint.SYMBOLCENTERPOINT);
 
@@ -1279,14 +1346,14 @@ function calendarikko(userOptions) {
                     }
 
                 // remove shapes
-                symbolGroup.remove();
-                symbolFrame.remove();
+                    symbolGroup.remove();
+                    symbolFrame.remove();
 
                 // set symbol name
-                symbolFrameReplace.name = symbolName;
+                symbolFrameReplace.name = symbolName + '_' + activeDocument.symbols.length;
             }
                 else {
-                    pasteSymbol();
+                    pasteSymbol(null, options.isReplace && symbolSizeFill.value);
                 }
         }
             catch(e){
@@ -1321,6 +1388,8 @@ function calendarikko(userOptions) {
             allMonths = options.endMonth,
             allYears = options.endYear - options.startYear,
             isSavePos = false;
+
+        options.isReplace = isReplace;
 
         if (!isReplace) {
             $layer.name = options.systemNames.prefix + options.systemNames.layer;
@@ -1618,19 +1687,23 @@ function calendarikko(userOptions) {
         createCalendarriko();
         return this;
     }
-    this.replace = function (layer) {
-        try {
-            layer = (layer && !(layer instanceof Function)) || activeDocument.layers.getByName(options.systemNames.prefix + options.systemNames.layer);
-        } catch(e) {}
-
-        if (layer && layer.name === options.systemNames.prefix + options.systemNames.layer && layer.pageItems.length) {
+    this.replace = function (layer) {   
+        if (layer && layer.typename === 'Layer') {
             createCalendarriko(layer, true);
-        }
-            else {
-                if (confirm('Sorry, calendar not found! Create new?')) {
-                    createCalendarriko();
-                }
+        } else {
+            try {
+                layer = (layer && !(layer instanceof Function)) || activeDocument.layers.getByName(options.systemNames.prefix + options.systemNames.layer);
+            } catch(e) {}
+    
+            if (layer && layer.name === options.systemNames.prefix + options.systemNames.layer && layer.pageItems.length) {
+                createCalendarriko(layer, true);
             }
+                else {
+                    if (confirm('Sorry, calendar not found! Create new?')) {
+                        createCalendarriko();
+                    }
+                }
+        }
 
         return this;
     }
@@ -1685,8 +1758,45 @@ function normalizeInputMonth (val, item, min, max) {
     }
 }
 
+
+function getItemsNameCollection(items, prefix) {
+    var length = items.length,
+        collection = [];
+
+    for (var i = 0; i < length; i++) {
+        if (prefix) {
+            if ((items[i].name || '').match(prefix)) {
+                collection.push(items[i].name);
+            }
+        } else {
+            collection.push(items[i].name);
+        }
+    }
+
+    return collection;
+}
+
+function getItemsByPrefix(items) {
+    return getItemsNameCollection(items, SYSTEMNAMES.prefix + '_')
+}
+
+function getShapeSymbols() {
+    return getItemsNameCollection(activeDocument.symbols);
+}
+
+function getCalendarLayers() {
+    return getItemsByPrefix(activeDocument.layers);
+}
+
+
+var symbolsCollection = getShapeSymbols();
+var isSymbolsCollection = !!symbolsCollection.length;
+var layersWithCalendarCollection = getCalendarLayers();
+var isLayersWithCalendar = !!layersWithCalendarCollection.length;
+
 var win = new Window('dialog', scriptName + copyright),
     globalGroup = win.add('group');
+
     globalGroup.orientation = 'column';
     globalGroup.alignChildren = 'fill';
 
@@ -1779,120 +1889,171 @@ var win = new Window('dialog', scriptName + copyright),
         orientation = 'row';
         alignChildren = ['fill', 'fill'];
 
-        with (add('panel')) {
+        with (add('group')) {
+            orientation = 'column';
+            alignChildren = ['fill', 'fill'];
+    
+            with (add('panel')) {
+                orientation = 'column';
+                alignChildren = ['fill', 'fill'];
+    
+                with(add('group')) {
+                    orientation = 'row';
+                    alignChildren = ['fill', 'fill'];
+    
+                    add('statictext', undefined, 'Frame size:');
+                    var __frameAutoSize = add('dropdownlist', undefined, ['Fit artboad', 'Artboard size', 'Selection fit', 'Selection size', 'Custom']);
+                    __frameAutoSize.selection = 0;
+                    __frameAutoSize.onChange = function () {
+                        var val = this.selection.text === 'Custom';
+                        __frameWidthText.enabled = __frameWidth.enabled = __frameHeightText.enabled = __frameHeight.enabled = val;
+                        marginsButton.enabled = !val;
+                    }
+                }
+    
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = ['fill', 'fill'];
+    
+                    with (add('group')) {
+                        orientation = 'column';
+                        alignChildren = 'fill';
+                        var __frameWidthText = add('statictext', undefined, 'Width (px, mm)'),
+                            __frameWidth = add('edittext', undefined, '300 mm');
+                            __frameWidthText.enabled = __frameWidth.enabled = false;
+                        add('statictext', undefined, 'Gutter X (px, mm)');
+                        var __gutterX = add('edittext', undefined, '15 mm');
+                        __gutterX.addEventListener('keydown', function(e) { inputNumberEvents(e, __gutterX, 0, Infinity); });
+                        __gutterX.addEventListener('change', function(e) { inputNumberEvents(e, __gutterX, 0, Infinity); });
+                    }
+            
+                    with (add('group')) {
+                        orientation = 'column';
+                        alignChildren = 'fill';
+                        var __frameHeightText = add('statictext', undefined, 'Height (px, mm)'),
+                            __frameHeight = add('edittext', undefined, '175 mm');
+                            __frameHeightText.enabled = __frameHeight.enabled = false;
+                        add('statictext', undefined, 'Gutter Y (px, mm)');
+                        var __gutterY = add('edittext', undefined, '15 mm');
+                        __gutterY.addEventListener('keydown', function(e) { inputNumberEvents(e, __gutterY, 0, Infinity); });
+                        __gutterY.addEventListener('change', function(e) { inputNumberEvents(e, __gutterY, 0, Infinity); });
+                    }
+                }
+    
+                var __linksFrames = add('checkbox', undefined, 'Create threaded text for frames?');
+                __linksFrames.value = false;
+    
+    
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = ['fill', 'fill'];
+    
+                    var marginsButton = add('button', undefined, 'Margin');
+                    marginsButton.onClick = function () {
+                        $margins = prompt('Enter the margin - [ top, right, bottom, left ]. Units mm, px. Separator space', $margins, 'Enter the Margin').toLowerCase();
+                    }
+    
+                    var paddingsButton = add('button', undefined, 'Padding');
+                    paddingsButton.onClick = function () {
+                        $paddings = prompt('Enter the padding - [ top, right, bottom, left ]. Units mm, px. Separator space', $paddings, 'Enter the Padding').toLowerCase();
+                    }
+                }
+            }
+    
+    
+            with (add('panel')) {
+                orientation = 'row';
+                alignChildren = ['fill', 'left'];
+
+                add('statictext', undefined, 'Calendar name:');
+                var inputCalendarName = add('edittext', [0, 0, 120, 25], SYSTEMNAMES.calendarName);
+            }
+        }
+
+        with(add('group')) {
             orientation = 'column';
             alignChildren = ['fill', 'fill'];
 
-            with(add('group')) {
-                orientation = 'row';
-                alignChildren = ['fill', 'fill'];
+            with (add('panel')) {
+                alignChildren = 'left';
 
-                add('statictext', undefined, 'Frame size:');
-                var __frameAutoSize = add('dropdownlist', undefined, ['Fit artboad', 'Artboard size', 'Selection fit', 'Selection size', 'Custom']);
-                __frameAutoSize.selection = 0;
-                __frameAutoSize.onChange = function () {
-                    var val = this.selection.text === 'Custom';
-                    __frameWidthText.enabled = __frameWidth.enabled = __frameHeightText.enabled = __frameHeight.enabled = val;
-                    marginsButton.enabled = !val;
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = 'left';
+                    add('statictext', undefined, 'Days week position:')
+                    var __daysPosition = add('dropdownlist', [0, 0, 80, 25], 'Top,Bottom,Top & Bottom'.split(','));
+                    __daysPosition.selection = 0;
+                }
+
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = 'left';
+                    add('statictext', undefined, 'Week num position:')
+                    var __weekNumbersPosition = add('dropdownlist', [0, 0, 80, 25], 'Left,Right,Left & Right'.split(','));
+                    __weekNumbersPosition.selection = 0;
+                }
+
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = ['fill', 'fill'];
+
+                    var __isDay = add('checkbox', undefined, 'Days week'),
+                        __isWeek = add('checkbox', undefined, 'Week numbers');
+                }
+
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = ['fill', 'fill'];
+
+                    var __isMonth = add('checkbox', undefined, 'Month name'),
+                        __isYearInMonth = add('checkbox', undefined, 'Year in month');
+                }
+
+                var __isMonthNumber = add('checkbox', undefined, 'Month number in month name');
+
+                __isDay.value = __isWeek.value = __isMonth.value = __isMonthNumber.value = __isYearInMonth.value = true;
+
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = ['fill', 'fill'];
+
+                    var __otherDays = add('checkbox', undefined, 'Enable days of other months');
+                    __otherDays.value = true;
                 }
             }
 
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = ['fill', 'fill'];
-
+            with(add('panel')) {
                 with (add('group')) {
-                    orientation = 'column';
+                    orientation = 'row';
                     alignChildren = 'fill';
-                    var __frameWidthText = add('statictext', undefined, 'Width (px, mm)'),
-                        __frameWidth = add('edittext', undefined, '300 mm');
-                        __frameWidthText.enabled = __frameWidth.enabled = false;
-                    add('statictext', undefined, 'Gutter X (px, mm)');
-                    var __gutterX = add('edittext', undefined, '15 mm');
-                    __gutterX.addEventListener('keydown', function(e) { inputNumberEvents(e, __gutterX, 0, Infinity); });
-                    __gutterX.addEventListener('change', function(e) { inputNumberEvents(e, __gutterX, 0, Infinity); });
-                }
         
-                with (add('group')) {
-                    orientation = 'column';
-                    alignChildren = 'fill';
-                    var __frameHeightText = add('statictext', undefined, 'Height (px, mm)'),
-                        __frameHeight = add('edittext', undefined, '175 mm');
-                        __frameHeightText.enabled = __frameHeight.enabled = false;
-                    add('statictext', undefined, 'Gutter Y (px, mm)');
-                    var __gutterY = add('edittext', undefined, '15 mm');
-                    __gutterY.addEventListener('keydown', function(e) { inputNumberEvents(e, __gutterY, 0, Infinity); });
-                    __gutterY.addEventListener('change', function(e) { inputNumberEvents(e, __gutterY, 0, Infinity); });
+                    add('statictext', undefined, 'Shapes for frames:');
+                    var shapesVal = add('dropdownlist', [0, 0, 85, 25], 'None,Create New,Use Fill,Use Existing'.split(','));
+                    shapesVal.selection = 1;
+                    shapesVal.onChange = function (e) {
+                        if (!!symbolsCollection.length) {
+                            selectShapeGroup.enabled = this.selection.index > 1
+                        }
+                    }
                 }
-            }
 
-            var __linksFrames = add('checkbox', undefined, 'Create threaded text for frames?');
-            __linksFrames.value = false;
+                with (selectShapeGroup = add('group')) {
+                    orientation = 'row';
+                    alignChildren = 'fill';
+                    enabled = !!symbolsCollection.length;
+        
+                    add('statictext', undefined, 'Select shape:');
+                    var selectShape = add('dropdownlist', [0, 0, 115, 25], symbolsCollection);
+                    selectShape.selection = 0;
+                }
 
-            var marginsButton = add('button', undefined, 'Margins (not for custom frame)');
-            marginsButton.onClick = function () {
-                $margins = prompt('Enter the margin - top right bottom left. Units mm, px. Separator space', $margins).toLowerCase();
-            }
-        }
-        with (add('panel')) {
-            alignChildren = 'left';
-
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = 'left';
-                add('statictext', undefined, 'Days week position:')
-                var __daysPosition = add('dropdownlist', [0, 0, 80, 25], 'Top,Bottom,Top & Bottom'.split(','));
-                __daysPosition.selection = 0;
-            }
-
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = 'left';
-                add('statictext', undefined, 'Week num position:')
-                var __weekNumbersPosition = add('dropdownlist', [0, 0, 80, 25], 'Left,Right,Left & Right'.split(','));
-                __weekNumbersPosition.selection = 0;
-            }
-
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = ['fill', 'fill'];
-
-                var __isDay = add('checkbox', undefined, 'Days week'),
-                    __isWeek = add('checkbox', undefined, 'Week numbers');
-            }
-
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = ['fill', 'fill'];
-
-                var __isMonth = add('checkbox', undefined, 'Month name'),
-                    __isYearInMonth = add('checkbox', undefined, 'Year in month');
-            }
-            __isDay.value = __isWeek.value = __isMonth.value = __isYearInMonth.value = true;
-
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = ['fill', 'fill'];
-
-                var __otherDays = add('checkbox', undefined, 'Enable days of other months');
-                __otherDays.value = true;
-            }
-
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = 'fill';
-    
-                add('statictext', undefined, 'Shapes for frames:');
-                var shapesVal = add('dropdownlist', [0, 0, 85, 25], 'None,Create New,Use Fill,Use Existing'.split(','));
-                shapesVal.selection = 1;
-            }
-
-            with (add('group')) {
-                orientation = 'row';
-                alignChildren = 'fill';
-    
-                var __createStyle = add('checkbox', undefined, 'Create styles or replace existing?');
-                __createStyle.value = true;
+                with (add('group')) {
+                    orientation = 'row';
+                    alignChildren = 'fill';
+        
+                    var __createStyle = add('checkbox', undefined, 'Create styles or replace existing?');
+                    __createStyle.value = true;
+                }
             }
         }
     }
@@ -1917,12 +2078,117 @@ var win = new Window('dialog', scriptName + copyright),
 
     var replaceButton = winButtons.add('button', undefined, 'Replace');
     replaceButton.helpTip = 'Replaces everything except width, height, position, shapes and styles';
-    replaceButton.onClick = replaceAction;
+    replaceButton.onClick = function () {
+        if (isLayersWithCalendar) {
+            isShowReplaceWindow = true;
+            win.active = false;
+            winForReplace.center();
+            winForReplace.show();
+
+            if (!winForReplaceSize) {
+                winForReplaceSize = winForReplace.preferredSize;
+            } else {
+                winForReplace.preferredSize = winForReplaceSize;
+            }
+
+            winForReplace.active = true;
+        } else {
+            alert('Calendar not found!');
+        }
+    };
 
     var ok = winButtons.add('button', undefined, 'Create calendar', { justify: 'right' });
     ok.helpTip = 'Press Enter to Run';
     ok.onClick = startAction;
     ok.active = true;
+
+var winForReplace = new Window('dialog', 'Replace / Extra settings: ' + scriptName + copyright);
+winForReplace.orientation = 'column';
+winForReplace.alignChildren = 'fill';
+
+with (winForReplace.add('group')) {
+    orientation = 'column';
+    alignChildren = 'fill';
+
+    add('statictext', undefined, 'Select calendar:');
+    var layersWithCalendar = add('dropdownlist', undefined, layersWithCalendarCollection);
+    layersWithCalendar.selection = 0;
+    layersWithCalendar.enabled = isLayersWithCalendar;
+
+    with (add('panel', undefined, 'Symbols')) {
+        orientation = 'column';
+        alignChildren = ['fill', 'fill'];
+    
+        var winForReplaceSymbols = add('dropdownlist', undefined, symbolsCollection);
+        winForReplaceSymbols.selection = selectShape.selection.index;
+        winForReplaceSymbols.enabled = isSymbolsCollection;
+
+        var symbolSizeFill = add('checkbox', undefined, 'Symbol size - fill to frame');
+        symbolSizeFill.value = true;
+    }
+
+    var replaceOnlySymbolsButton = add('button', undefined, 'Replace only symbols');
+    replaceOnlySymbolsButton.onClick = function() {
+        var symbol = activeDocument.symbols.getByName(winForReplaceSymbols.selection.text);
+        var layer = activeDocument.layers.getByName(layersWithCalendar.selection.text);
+
+        if (layer && layer.typename === 'Layer') {
+            var months = layer.pageItems;
+
+            for (var i = 0; i < months.length; i++) {
+                var monthFrame = months[i];
+                var monthRemains = monthFrame.pageItems;
+
+                for (var j = monthRemains.length - 1; j >= 0; j--) {
+                    if (monthRemains[j].typename === 'SymbolItem') {
+                        if (symbolSizeFill.value) {
+                            var width = monthRemains[j].width;
+                            var height = monthRemains[j].height;
+                            var position = monthRemains[j].position;
+                        }
+
+                        monthRemains[j].symbol = symbol;
+
+                        if (symbolSizeFill.value) {
+                            monthRemains[j].width = monthFrame.width > width ? monthFrame.width : width;
+                            monthRemains[j].height = monthFrame.height > height ? monthFrame.height : height;
+                            monthRemains[j].position = [
+                                monthFrame.width > width ? monthFrame.position[0] : position[0],
+                                monthFrame.height > height ? monthFrame.position[1] : position[1]
+                            ];
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        win.close();
+        winForReplace.close();
+    }
+
+    with (add('group')) {
+        orientation = 'row';
+        alignChildren = ['fill', 'fill'];
+
+        var winForReplaceButtonCancel = add('button', undefined, 'Cancel');
+        winForReplaceButtonCancel.helpTip = 'Press Esc to Close';
+        winForReplaceButtonCancel.onClick = function () {
+            winForReplace.close();
+        }
+
+        var winForReplaceButtonOK = add('button', undefined, 'Replace');
+        winForReplaceButtonOK.helpTip = 'Replace calendar';
+        winForReplaceButtonOK.onClick = function () {
+            var layer = activeDocument.layers.getByName(layersWithCalendar.selection.text);
+
+            replaceAction(layer);
+            win.close();
+            winForReplace.close();
+        };
+    }
+}
 
 function saveSettings() {
     var $file = new File(settingFile.folder + settingFile.name),
@@ -1950,11 +2216,18 @@ function saveSettings() {
             shapesVal.selection.index,
             __createStyle.value,
             __linksFrames.value,
-            __compactMode.value
+            __compactMode.value,
+            inputCalendarName.text,
+            __isMonthNumber.value
         ].toString() + '\n' +
         __weekends.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
         winHolidays.text.replace(/ /g, '').replace(/,/g, ', ') + '\n' +
-        $margins;
+        $margins + '\n' +
+        $paddings + '\n' +
+        // settings for "replace" window
+        [
+            symbolSizeFill.value
+        ].toString();
 
     $file.open('w');
     $file.write(data);
@@ -1970,7 +2243,9 @@ function loadSettings() {
                 $main = data[0].split(','),
                 $wnds = data[1],
                 $holi = data[2],
-                $mrgn = data[3];
+                $mrgn = data[3],
+                $pdns = data[4];
+                $forReplaceWin = data[5].split(',');
             __startYear.text = $main[0];
             __startMonth.text = $main[1];
             __endYear.text = $main[2];
@@ -1992,12 +2267,17 @@ function loadSettings() {
             __otherDays.value = ($main[18] === 'true');
             __standart.selection = parseInt($main[19]);
             shapesVal.selection = parseInt($main[20]);
+            selectShapeGroup.enabled = shapesVal.selection.index > 1;
             __createStyle.value = ($main[21] === 'true');
             __linksFrames.value = ($main[22] === 'true');
             __compactMode.value = ($main[23] === 'true');
+            inputCalendarName.text = ($main[24] || SYSTEMNAMES.calendarName);
+            __isMonthNumber.value = ($main[25] === 'true');
             __weekends.text = $wnds;
             winHolidays.text = $holi;
             $margins = $mrgn;
+            $paddings = $pdns;
+            symbolSizeFill.value = ($forReplaceWin[0] === 'true');
 
             var val = __frameAutoSize.selection.text === 'Custom';
             __frameWidthText.enabled = __frameWidth.enabled = __frameHeightText.enabled = __frameHeight.enabled = val;
@@ -2015,6 +2295,17 @@ function getCalendarData() {
         $preset = (__daysPosition.selection.index === 2 ? 'days-title-top, days-title-bottom' : ('days-title-' + __daysPosition.selection.text.toLowerCase()));
         $preset += (__weekNumbersPosition.selection.index === 2 ? 'week-numbers-left, week-numbers-right' : ('week-numbers-' + __weekNumbersPosition.selection.text.toLowerCase()));
 
+    if (isShowReplaceWindow) {
+        SYSTEMNAMES.calendarName = layersWithCalendar.selection.text.slice(0, layersWithCalendar.selection.text.indexOf('_'));
+        SYSTEMNAMES.symbolName = (isSymbolsCollection && winForReplaceSymbols.selection.text);
+    } else {
+        SYSTEMNAMES.calendarName = inputCalendarName.text;
+        SYSTEMNAMES.symbolName = ((isSymbolsCollection && shapesVal.selection.index > 1) && selectShape.selection.text);
+    }
+
+    SYSTEMNAMES.prefix = SYSTEMNAMES.calendarName + '_' + SYSTEMNAMES.prefix + '_';
+
+
     return {
         startYear:      parseInt(__startYear.text),
         endYear:        parseInt(__endYear.text),
@@ -2024,7 +2315,8 @@ function getCalendarData() {
         language:       __lang.selection.text.toLowerCase().slice(0,2),
         holidays:       winHolidays.text.replace(/ /g, '').split(','),
         compact_mode:   __compactMode.value,
-        margin:         $margins,
+        margin:         $margins || 0,
+        padding:        $paddings === 'undefined' ? 0 : ($paddings || 0),
         shapes:         shapesVal.selection.text.toLowerCase().replace(/ /g, '-'),
         standart:       __standart.selection.text === 'European' ? 'eu' : 'us',
         frameWidth:     $size.width,
@@ -2037,11 +2329,13 @@ function getCalendarData() {
         notStyles:      !__createStyle.value,
         linkFrames:     __linksFrames.value,
         weekends:       __weekends.text.replace(/ /g, '').split(','),
+        systemNames: SYSTEMNAMES,
         enableFrames: {
             day: __isDay.value,
             week: __isWeek.value,
             month: __isMonth.value,
             yearInMonth: __isYearInMonth.value,
+            numberMonth: __isMonthNumber.value,
         },
     };
 }
@@ -2056,9 +2350,9 @@ function startAction() {
         }
 }
 
-function replaceAction() {
+function replaceAction (layer) {
     try {
-        new calendarikko(getCalendarData()).replace();
+        new calendarikko(getCalendarData()).replace(layer);
         win.close();
     }
         catch (e) {

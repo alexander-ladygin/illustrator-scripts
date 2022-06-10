@@ -180,7 +180,7 @@ The script copies color samples from the document to the active document while m
 ## &nbsp;
 ## **Contact**
 Email: [i@ladygin.pro](mailto:i@ladygin.pro)<br>
-Site: [www.ladygin.pro](http://ladygin.pro)
+Site: [www.ladyginpro.ru](http://ladyginpro.ru)
 
 ## **LICENSE**
 All scripts is licensed under the MIT licence.<br>

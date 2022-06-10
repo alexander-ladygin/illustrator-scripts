@@ -555,6 +555,55 @@ function calendarikko(userOptions) {
                         'Грудень'
                     ]
                 },
+                // português
+                po: {
+                    oneLetter: [
+                        's',
+                        't',
+                        'q',
+                        'q',
+                        's',
+                        's',
+                        'd'
+                    ],
+                    shortForm: [
+                        'Seg',
+                        'Ter',
+                        'Qua',
+                        'Qui',
+                        'Sex',
+                        'Sáb',
+                        'Dom'
+                    ],
+                    fullWord: [
+                        'Segunda',
+                        'Terça',
+                        'Quarta',
+                        'Quinta',
+                        'Sexta',
+                        'Sábado',
+                        'Domingo'
+                    ],
+                    weeks: {
+                        oneLetter: 'S',
+                        shortForm: 'Sem',
+                        fullWord: 'Semana',
+                    },
+                    months: [
+                        'Janeiro',
+                        'Fevereiro',
+                        'Março',
+                        'Abril',
+                        'Maio',
+                        'Junho',
+                        'Julho',
+                        'Agosto',
+                        'Setembro',
+                        'Outubro',
+                        'Novembro',
+                        'Dezembro'
+                    ]
+                },
             }
         }.extend(userOptions || {}, true);
 
@@ -1846,7 +1895,7 @@ var win = new Window('dialog', scriptName + copyright),
                     orientation = 'column';
                     alignChildren = 'fill';
                     add('statictext', undefined, 'Language:');
-                    var __lang = add('dropdownlist', undefined, 'Russian,Ukrainian,English,Deutsch,French,Spanish,Italian,Danish'.split(','));
+                    var __lang = add('dropdownlist', undefined, 'Russian,Ukrainian,Português,English,Deutsch,French,Spanish,Italian,Danish'.split(','));
                     __lang.selection = 0;
                 }
                 with (add('group')) {

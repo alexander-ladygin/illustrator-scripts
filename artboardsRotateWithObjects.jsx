@@ -7,7 +7,7 @@
           Sergey Osokin, email: hi@sergosokin.ru
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -26,7 +26,7 @@ try {
             hiddenItems = new Array();
 
         // Create Main Window
-        var dlg = new Window('dialog', scriptName + ' ver.' + scriptVersion + ' \u00A9 www.ladygin.pro', undefined);
+        var dlg = new Window('dialog', scriptName + ' ver.' + scriptVersion + ' \u00A9 www.ladyginpro.ru', undefined);
         dlg.orientation = 'column';
         dlg.alignChildren = ['fill', 'fill'];
 

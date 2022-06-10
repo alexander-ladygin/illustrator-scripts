@@ -5,7 +5,7 @@
   Name: niceSlice.jsx;
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -15,7 +15,7 @@ $.toArr = function (classCollection, callback) {var arr = [], l = classCollectio
 Array.prototype.removeAll = function() { var i = this.length; if (i > 0) while (i--) this[i].remove(); return this; }
 
 var scriptName = 'NiceSlice',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'

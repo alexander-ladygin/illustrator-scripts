@@ -5,7 +5,7 @@
   Name: rich_glitch.jsx;
 
   Copyright (c) 2019
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -16,7 +16,7 @@ $.toArr = function (classCollection, callback) {var arr = [], l = classCollectio
 Array.prototype.removeAll = function() { var i = this.length; if (i > 0) while (i--) this[i].remove(); return this; }
 
 var scriptName = 'rich_glitch',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'

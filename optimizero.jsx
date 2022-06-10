@@ -5,11 +5,11 @@
   Name: optimizero.jsx;
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 var scriptName = 'Optimizero',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'

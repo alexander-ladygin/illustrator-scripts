@@ -7,7 +7,7 @@
   Thanks for refactoring and testing - Sergey Osokin, email: hi@sergosokin.ru
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -164,7 +164,7 @@ function resizeArtboardWithObjects (__size, __mode, __artNum) {
     }
 }
 
-var win = new Window('dialog', 'Resize artboard with objects \u00A9 www.ladygin.pro', undefined);
+var win = new Window('dialog', 'Resize artboard with objects \u00A9 www.ladyginpro.ru', undefined);
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 

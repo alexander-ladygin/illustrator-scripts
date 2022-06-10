@@ -5,7 +5,7 @@
   Name: calendarikko.jsx;
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -33,7 +33,7 @@ function parseMargin (value, ifErrReturnValue) {value = (typeof value === 'strin
 function getBounds (items, bounds) {bounds = bounds || 'geometricBounds'; bounds = (bounds && bounds.toLowerCase().indexOf('bounds') === -1) ? bounds += 'Bounds' : bounds;var l = items.length, x = [], y = [], w = [], h = [];for (var i = 0; i < l; i++) {x.push(items[i][bounds][0]);y.push(items[i][bounds][1]);w.push(items[i][bounds][2]);h.push(items[i][bounds][3]);};return [Math.min.apply(null, x), Math.max.apply(null, y), Math.max.apply(null, w), Math.min.apply(null, h)];}
 
 var scriptName = 'Calendarikko',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'

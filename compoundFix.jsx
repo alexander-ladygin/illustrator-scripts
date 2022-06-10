@@ -5,12 +5,12 @@
   Name: compoundFix.jsx;
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 if (app.executeMenuCommand instanceof Function) {
     if (activeDocument.compoundPathItems.length) {
-        var win = new Window('dialog', 'CompoundFix \u00A9 www.ladygin.pro', undefined);
+        var win = new Window('dialog', 'CompoundFix \u00A9 www.ladyginpro.ru', undefined);
             win.orientation = 'column';
             win.alignChildren = ['fill', 'fill'];
 

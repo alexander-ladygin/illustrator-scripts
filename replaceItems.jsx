@@ -5,7 +5,7 @@
   Name: replaceItems.jsx;
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -15,7 +15,7 @@ var scriptName = 'ReplaceItems',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
     };
 
-var win = new Window('dialog', scriptName + ' \u00A9 www.ladygin.pro');
+var win = new Window('dialog', scriptName + ' \u00A9 www.ladyginpro.ru');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 

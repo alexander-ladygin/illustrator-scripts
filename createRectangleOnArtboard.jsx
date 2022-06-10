@@ -6,12 +6,12 @@
   Author: Alexander Ladygin, email: i@ladygin.pro
 
   Copyright (c) 2019
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
 var scriptName = 'CROA',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
@@ -67,7 +67,7 @@ if (app.documents.length) {
       }
     }
 
-    var win = new Window('dialog', 'Rectangle On Art \u00A9 www.ladygin.pro', undefined);
+    var win = new Window('dialog', 'Rectangle On Art \u00A9 www.ladyginpro.ru', undefined);
         win.orientation = 'column';
         win.alignChildren = ['fill', 'fill'];
 

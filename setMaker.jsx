@@ -6,7 +6,7 @@
   Author: Alexander Ladygin, email: i@ladygin.pro
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -26,7 +26,7 @@ Array.prototype.filter = function (callback) {
 };
 
 var scriptName = 'SetMaker',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
@@ -238,7 +238,7 @@ with (panelRight = globalGroup.add('panel', undefined, 'Artboards setting')) {
         with (add('group')) {
             orientation = 'row';
             add('statictext', undefined, 'Suffix:');
-            var etArtNameSuffix = add('edittext', [0, 0, 185, 25], '_www.ladygin.pro');
+            var etArtNameSuffix = add('edittext', [0, 0, 185, 25], '_www.ladyginpro.ru');
         }
     }
 }

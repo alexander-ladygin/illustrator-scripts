@@ -5,7 +5,7 @@
   Name: bigBang.jsx;
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -17,7 +17,7 @@ $.convertUnits = function (obj, b) {if (obj === undefined) {return obj;}if (b ==
 
 
 var scriptName = 'bigBang',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'

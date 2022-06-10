@@ -5,7 +5,7 @@
   Name: alignEx.jsx;
 
   Copyright (c) 2020
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -716,7 +716,7 @@ function runScript(scriptOptions) {
 }
 
 var scriptName = 'AlignEx';
-var copyright = ' \u00A9 www.ladygin.pro';
+var copyright = ' \u00A9 www.ladyginpro.ru';
 var settingFile = {
   name: scriptName + '__setting.json',
   folder: Folder.myDocuments + '/LA_AI_Scripts/'

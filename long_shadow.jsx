@@ -5,7 +5,7 @@
   Name: long_shadow.jsx;
 
   Copyright (c) 2019
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -14,7 +14,7 @@ $.convertUnits = function (obj, b) {if (obj === undefined) {return obj;}if (b ==
 
 
 var scriptName = 'long_shadow',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
@@ -179,7 +179,7 @@ function inputNumberEvents (ev, _input, min, max, callback){
 }
 
 var isUndo = false,
-  win = new Window('dialog',  'Long shadow \u00A9 www.ladygin.pro');
+  win = new Window('dialog',  'Long shadow \u00A9 www.ladyginpro.ru');
 
 win.alignChildren = 'fill';
 

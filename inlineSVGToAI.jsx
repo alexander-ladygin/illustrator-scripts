@@ -28,7 +28,7 @@ function main() {
 
 // Create dialog window
 function uiDialog() {
-  var win = new Window("dialog", "Inline SVG To AI \u00A9 www.ladygin.pro", undefined),
+  var win = new Window("dialog", "Inline SVG To AI \u00A9 www.ladyginpro.ru", undefined),
     winPanel = win.add("panel");
     winPanel.alignChildren = ['fill', 'fill'];
 

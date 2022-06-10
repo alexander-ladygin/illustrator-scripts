@@ -6,7 +6,7 @@
   Author: Alexander Ladygin, email: i@ladygin.pro
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 
@@ -18,7 +18,7 @@ var scriptName = 'Harmonizer',
     useClippingMask = true;
 
 var isUndo = false,
-    win = new Window('dialog', scriptName + ' \u00A9 www.ladygin.pro', undefined);
+    win = new Window('dialog', scriptName + ' \u00A9 www.ladyginpro.ru', undefined);
     win.orientation = 'column';
     win.alignChildren = 'fill';
 

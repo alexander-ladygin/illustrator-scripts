@@ -6,7 +6,7 @@
   Author: Alexander Ladygin, email: i@ladygin.pro
 
   Copyright (c) 2018
-  www.ladygin.pro
+  www.ladyginpro.ru
 
 */
 Object.prototype.removeItemsWithArray = function (items) {var obj = [];for (var i = 0; i < this.length; i++) {if (!check(this[i])) {obj.push(this[i]);}}function check(e) {for (var j = 0; j < items.length; j++) {if (e === items[j]) {return true;}}return false;}return obj;};
@@ -16,7 +16,7 @@ Object.prototype.emptySubLayers = function (level) {var arr = [], obj = this;fun
 Array.prototype.remove = function(){var i = this.length; if (i > 0) while (i--) this[i].remove();}
 
 var scriptName = 'AIMTNL',
-    copyright = ' \u00A9 www.ladygin.pro',
+    copyright = ' \u00A9 www.ladyginpro.ru',
     settingFile = {
         name: scriptName + '__setting.json',
         folder: Folder.myDocuments + '/LA_AI_Scripts/'
@@ -86,7 +86,7 @@ if (app.documents.length) {
 
     var selectionBak = selection;
 
-    var win = new Window('dialog', 'Artboards items move to new layer \u00A9 www.ladygin.pro', undefined);
+    var win = new Window('dialog', 'Artboards items move to new layer \u00A9 www.ladyginpro.ru', undefined);
         win.orientation = 'column';
         win.alignChildren = ['fill', 'fill'];
 

@@ -5,7 +5,7 @@
   Name: fillinger.jsx;
 
   Modify and refactoring: Alexander Ladygin
-  www.ladygin.pro
+  www.ladyginpro.ru
 
   Copyright (c) 2018
 
@@ -43,7 +43,7 @@ else {
             }
     }
 
-    var win = new Window('dialog', 'Fillinger \u00A9 www.ladygin.pro');
+    var win = new Window('dialog', 'Fillinger \u00A9 www.ladyginpro.ru');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 

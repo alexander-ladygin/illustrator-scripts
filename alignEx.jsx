@@ -155,8 +155,145 @@ function helpersFunctions() {
   }
 }
 function scriptBody(props) {
+  function forEach(items, callback, returnArray) {
+    var itemsCollection = [],
+      length = items.length;
+
+    for (var i = 0; i < length; i++) {
+      if (returnArray === 'callback') {
+        itemsCollection.push(callback(items[i], i, items));
+      } else {
+        callback(items[i], i, items);
+        if (returnArray) {
+          itemsCollection.push(items[i]);
+        }
+      }
+
+    }
+
+    return itemsCollection;
+  }
   function getBoundsType (boundsType) {
     return boundsType !== 'visible' ? 'geometricBounds' : 'visibleBounds';
+  }
+  function getKeyObject (userOptions) {
+    var userOptions = typeof userOptions === 'object' ? userOptions : {};
+    var boundsTypeValue = getBoundsType(userOptions.bounds);
+    var options = {
+      resetPosition: userOptions.resetPosition || false,
+      showAlerts: userOptions.showAlerts || false
+    }
+    function compareBounds(oldBounds, newBounds) {
+      return (
+        oldBounds[0] === newBounds[0] &&
+        oldBounds[1] === newBounds[1] &&
+        oldBounds[2] === newBounds[2] &&
+        oldBounds[3] === newBounds[3]
+      );
+    }
+    function resetActionRedraw(count, keyObject) {
+      // app.redraw();
+      // app.undo();
+
+      return keyObject;
+    }
+    function getItemsNotAlign(items, oldBounds) {
+      var itemsNotAlign = [],
+        oldBoundsNotAlign = [],
+        itemsCount = items.length;
+
+      for (var i = 0; i < itemsCount; i++) {
+        if (compareBounds(items[i][boundsTypeValue], oldBounds[i])) {
+          oldBoundsNotAlign.push(oldBounds[i]);
+          itemsNotAlign.push(items[i]);
+        }
+      }
+
+      return {
+        oldBounds: oldBoundsNotAlign,
+        items: itemsNotAlign
+      };
+    }
+
+
+    var KEY_OBJECT = null,
+      items = selection,
+      itemsCount = items.length;
+
+
+    if (!itemsCount) {
+      if (options.showAlerts) {
+        alert('Please select objects!');
+      }
+
+      return;
+    }
+
+
+    var itemsOldBounds = [],
+      itemsOldPosition = [];
+
+    forEach(items, function (item) {
+      itemsOldBounds.push(item[boundsTypeValue]);
+
+      if (options.resetPosition) {
+        itemsOldPosition.push(item.position);
+      }
+    });
+
+
+
+    app.executeMenuCommand('Vertical Align Top');
+
+    var notAlignTop = getItemsNotAlign(items, itemsOldBounds);
+
+    if (!notAlignTop.items.length) return resetActionRedraw(1, KEY_OBJECT);
+
+
+
+    app.executeMenuCommand('Horizontal Align Right');
+
+    var notAlignRight = getItemsNotAlign(notAlignTop.items, notAlignTop.oldBounds);
+
+
+    if (!notAlignRight.items.length) return resetActionRedraw(2, KEY_OBJECT);
+
+
+
+    app.executeMenuCommand('Vertical Align Bottom');
+
+    var notAlignBottom = getItemsNotAlign(notAlignRight.items, notAlignRight.oldBounds);
+
+    if (!notAlignBottom.items.length) return resetActionRedraw(3, KEY_OBJECT);
+
+
+
+    app.executeMenuCommand('Horizontal Align Left');
+
+    var notAlignRight = getItemsNotAlign(notAlignBottom.items, notAlignBottom.oldBounds);
+
+    if (!notAlignRight.items.length) return resetActionRedraw(4, KEY_OBJECT);
+
+
+    KEY_OBJECT = notAlignRight.items[0];
+
+
+    // reset items position
+    if (options.resetPosition) {
+      var itemsNewBounds = forEach(items, function (item) { return item[boundsTypeValue]; }, 'callback');
+
+      for (var i = 0; i < itemsCount; i++) {
+        if (!compareBounds(itemsOldBounds[i], itemsNewBounds[i])) {
+          items[i].position = itemsOldPosition[i];
+        }
+      }
+    } else {
+      // app.redraw();
+      // app.undo();
+    }
+
+
+    return KEY_OBJECT;
   }
   function getSelectionAreaBounds (elements, boundsType) {
     /*
@@ -571,6 +708,14 @@ function scriptBody(props) {
 
       if (props.keyObject === 'selection') {
         keyObject = items;
+      } else if (props.keyObject === 'native') {
+        keyObject = getKeyObject({
+          boundsType: props.bounds,
+          resetPosition: true
+        });
+        if (keyObject) {
+          parsedProps.keyObjectBoundsType = props.keyObjectBoundsType;
+        }
       } else if (!isNaN(parseInt(props.keyObject))) {
         keyObject = selection[props.keyObject];
         parsedProps.keyObjectBoundsType = props.keyObjectBoundsType;
@@ -1247,6 +1392,8 @@ function onClickButtonAlign (button, event, options) {
     
     if (alignToSelectionCheckbox.value) {
       scriptOptions.keyObject = 'selection';
+    } else if (alignByKeyObjectNativeDropdownListCheckbox.value) {
+      scriptOptions.keyObject = 'native';
     }
   
     runScript(scriptOptions);
@@ -1474,11 +1621,15 @@ var panelKeyObjectDropdownList = panelsChildRightGroup.add('panel', undefined, '
   panelKeyObjectDropdownList.orientation = 'column';
   panelKeyObjectDropdownList.alignChildren = 'fill';
   
+  var alignByKeyObjectNativeDropdownListCheckbox = panelKeyObjectDropdownList.add('checkbox', undefined, 'Align by key object Native');
+  alignByKeyObjectNativeDropdownListCheckbox.onClick = function (event) {
+    onChangeKeyObjectNativeCheckbox(this.value);
+  }
   var alignByKeyObjectDropdownListCheckbox = panelKeyObjectDropdownList.add('checkbox', undefined, 'Align by key object');
   alignByKeyObjectDropdownListCheckbox.onClick = function (event) {
     onChangeKeyObjectCheckbox(this.value);
   }
-  
+
   var keyObjectDropdownListGroup = panelKeyObjectDropdownList.add('group');
   keyObjectDropdownListGroup.orientation = 'column';
   keyObjectDropdownListGroup.alignChildren = ['fill', 'fill'];
@@ -1521,7 +1672,14 @@ function onChangeAlignToSelectionCheckbox (value) {
   alignByKeyObjectDropdownListCheckbox.enabled = !value;
 }
 function onChangeKeyObjectCheckbox (value) {
+  alignByKeyObjectNativeDropdownListCheckbox.enabled = !value;
   keyObjectDropdownListGroup.enabled = value;
+  alignToSelectionCheckbox.enabled = !value;
+}
+function onChangeKeyObjectNativeCheckbox (value) {
+  alignByKeyObjectDropdownListCheckbox.enabled = !value;
+  keyObjectDropdownListGroup.enabled = value;
+  keyObjectDropdownList.enabled = !value;
   alignToSelectionCheckbox.enabled = !value;
 }
 onChangeAlignToSelectionCheckbox(alignToSelectionCheckbox.value);
@@ -1538,7 +1696,8 @@ function saveSettings() {
       keyObjectBoundsTypeDropdownList.selection.index,
       boundsTypeDropdownList.selection.index,
       alignByKeyObjectDropdownListCheckbox.value,
-      alignToSelectionCheckbox.value
+      alignToSelectionCheckbox.value,
+      alignByKeyObjectNativeDropdownListCheckbox.value
     ].toString() + '\n' +
     win.location.toString();
   
@@ -1564,8 +1723,11 @@ function loadSettings() {
       boundsTypeDropdownList.selection = parseInt(generalSettings[6]) || 0;
       alignByKeyObjectDropdownListCheckbox.value = (generalSettings[7] === 'true');
       alignToSelectionCheckbox.value = (generalSettings[8] === 'true');
+      alignByKeyObjectNativeDropdownListCheckbox.value = (generalSettings[9] === 'true');
+
       onChangeAlignToSelectionCheckbox(alignToSelectionCheckbox.value);
       onChangeKeyObjectCheckbox(alignByKeyObjectDropdownListCheckbox.value);
+      onChangeKeyObjectNativeCheckbox(alignByKeyObjectNativeDropdownListCheckbox.value);
 
       var locationValues = fileData[1].split(',');
       uiSettings.window.location = locationValues;

@@ -1467,17 +1467,17 @@ panelExtraAlign.alignChildren = 'left';
   panelExtraAlignThirdGroup.orientation = 'row';
   panelExtraAlignThirdGroup.spacing = uiSettings.button.spacing;
   
-  createIconButton(panelExtraAlignThirdGroup, { method: 'distribute_spacing_top', helpTip: 'Distribute Spacing To Top', onClick: onClickButtonAlign });
-  createIconButton(panelExtraAlignThirdGroup, { method: 'distribute_spacing_bottom', helpTip: 'Distribute Spacing To Bottom', onClick: onClickButtonAlign });
+  createIconButton(panelExtraAlignThirdGroup, { method: 'distribute_spacing_left', helpTip: 'Distribute Spacing To Left', onClick: onClickButtonAlign });
+  createIconButton(panelExtraAlignThirdGroup, { method: 'distribute_x', helpTip: 'Distribute Horizontal', onClick: onClickButtonAlign });
   createIconButton(panelExtraAlignThirdGroup, { method: 'distribute_spacing_right', helpTip: 'Distribute Spacing To Right', onClick: onClickButtonAlign });
   
   var panelExtraAlignFourGroup = panelExtraAlign.add('group');
   panelExtraAlignFourGroup.orientation = 'row';
   panelExtraAlignFourGroup.spacing = uiSettings.button.spacing;
 
-  createIconButton(panelExtraAlignFourGroup, { method: 'distribute_spacing_left', helpTip: 'Distribute Spacing To Left', onClick: onClickButtonAlign });
-  createIconButton(panelExtraAlignFourGroup, { method: 'distribute_x', helpTip: 'Distribute Horizontal', onClick: onClickButtonAlign });
+  createIconButton(panelExtraAlignFourGroup, { method: 'distribute_spacing_top', helpTip: 'Distribute Spacing To Top', onClick: onClickButtonAlign });
   createIconButton(panelExtraAlignFourGroup, { method: 'distribute_y', helpTip: 'Distribute Vertical', onClick: onClickButtonAlign });
+  createIconButton(panelExtraAlignFourGroup, { method: 'distribute_spacing_bottom', helpTip: 'Distribute Spacing To Bottom', onClick: onClickButtonAlign });
   
 var messageGroup = panelsChildLeftGroup.add('group');
 messageGroup.orientation = 'column';
